@@ -100,10 +100,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
 window.filterCraftingOptions = function() {
   const query = (document.getElementById('crafting-search-filter')?.value || "").toLowerCase();
-  const select = document.getElementById('crafting-search');
-  if (!select) return;
+  const listContainer = document.getElementById('crafting-select-list');
+  if (!listContainer) return;
   
-  select.innerHTML = '<option value="">-- Select a Crafting Target --</option>';
+  listContainer.innerHTML = '';
   
   const craftableItems = itemsDb.filter(item => {
     const recipe = getItemRecipe(item);
@@ -116,16 +116,43 @@ window.filterCraftingOptions = function() {
     return name.includes(query) || type.includes(query);
   });
   
+  if (filtered.length === 0) {
+    const noResults = document.createElement('div');
+    noResults.style.color = 'var(--text-muted)';
+    noResults.style.textAlign = 'center';
+    noResults.style.padding = '1.5rem 0.5rem';
+    noResults.style.fontSize = '0.85rem';
+    noResults.textContent = 'No matching blueprints';
+    listContainer.appendChild(noResults);
+    return;
+  }
+  
   filtered
     .sort((a, b) => (a.name.en || a.id).localeCompare(b.name.en || b.id))
     .forEach(item => {
-      const opt = document.createElement('option');
-      opt.value = item.id;
-      opt.textContent = `${item.name.en || item.id} (${item.rarity})`;
+      const itemEl = document.createElement('div');
+      itemEl.className = 'crafting-list-item';
       if (selectedCraftItem && selectedCraftItem.id === item.id) {
-        opt.selected = true;
+        itemEl.classList.add('selected');
       }
-      select.appendChild(opt);
+      
+      const rarityColor = `var(--rarity-${item.rarity.toLowerCase()})`;
+      
+      itemEl.innerHTML = `
+        <span class="item-name">${item.name.en || item.id}</span>
+        <span class="item-rarity-badge" style="color: ${rarityColor}">${item.rarity}</span>
+      `;
+      
+      itemEl.onclick = () => {
+        const currentSelected = listContainer.querySelector('.crafting-list-item.selected');
+        if (currentSelected) {
+          currentSelected.classList.remove('selected');
+        }
+        itemEl.classList.add('selected');
+        onSelectCraftItem(item.id);
+      };
+      
+      listContainer.appendChild(itemEl);
     });
 };
 
@@ -364,8 +391,22 @@ window.openDetailDrawer = function(itemId) {
     resolveBtn.onclick = () => {
       closeDetailDrawer();
       switchTab('crafting-tab', document.querySelectorAll('.tab-btn')[1]);
-      document.getElementById('crafting-search').value = item.id;
+      
+      const searchFilterInput = document.getElementById('crafting-search-filter');
+      if (searchFilterInput) {
+        searchFilterInput.value = '';
+      }
+      
       onSelectCraftItem(item.id);
+      filterCraftingOptions();
+      
+      setTimeout(() => {
+        const listContainer = document.getElementById('crafting-select-list');
+        const selectedEl = listContainer?.querySelector('.crafting-list-item.selected');
+        if (selectedEl) {
+          selectedEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }
+      }, 50);
     };
   } else {
     recipeSection.style.display = 'none';
