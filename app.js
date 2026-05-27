@@ -61,6 +61,51 @@ function isGadgetItem(item) {
   return ['Shield', 'Augment'].includes(item.type);
 }
 
+function matchesVirtualKeywords(item, query) {
+  if (!query) return false;
+  
+  // 1. Healing & Medical
+  if (['heal', 'healing', 'meds', 'medical'].includes(query)) {
+    return [
+      'adrenaline_shot', 'bandage', 'defibrillator', 'herbal_bandage', 'sterilized_bandage', 'vita_shot', 'vita_spray'
+    ].includes(item.id);
+  }
+  
+  // 2. Weapon Modifications
+  if (['mod', 'mods', 'attachment', 'attachments'].includes(query)) {
+    return item.type === 'Modification';
+  }
+  
+  // 3. Loot, Trash & Scrap
+  if (['scrap', 'junk', 'loot', 'trash'].includes(query)) {
+    return item.type === 'Recyclable' || item.type === 'Trinket';
+  }
+  
+  // 4. Keys & Access Cards
+  if (['card', 'cards', 'pass', 'passes', 'security'].includes(query)) {
+    return item.type === 'Key';
+  }
+  
+  // 5. Shield & Augments (Gadgets)
+  if (['gadget', 'gadgets', 'gear'].includes(query)) {
+    return ['Shield', 'Augment'].includes(item.type);
+  }
+  
+  // 6. Weapons/Guns
+  if (['weapon', 'weapons', 'gun', 'guns'].includes(query)) {
+    return isWeaponItem(item);
+  }
+  
+  // 7. Traps & Mines
+  if (['trap', 'traps', 'mine', 'mines'].includes(query)) {
+    return [
+      'blaze_grenade_trap', 'deadline', 'door_blocker', 'explosive_mine', 'gas_grenade_trap', 'gas_mine', 'jolt_mine', 'lure_grenade_trap', 'pulse_mine', 'smoke_grenade_trap'
+    ].includes(item.id);
+  }
+  
+  return false;
+}
+
 // Get effective recipe (including upgrades)
 function getItemRecipe(item) {
   if (!item) return null;
@@ -113,12 +158,7 @@ window.filterCraftingOptions = function() {
   const filtered = craftableItems.filter(item => {
     const name = (item.name?.en || item.id).toLowerCase();
     const type = (item.type || "").toLowerCase();
-    
-    // Virtual weapon search keyword mapping
-    const isWeapon = isWeaponItem(item);
-    const matchesVirtualWeapon = (query === 'weapon' || query === 'gun' || query === 'weapons' || query === 'guns') && isWeapon;
-    
-    return name.includes(query) || type.includes(query) || matchesVirtualWeapon;
+    return name.includes(query) || type.includes(query) || matchesVirtualKeywords(item, query);
   });
   
   if (filtered.length === 0) {
@@ -250,11 +290,7 @@ window.filterItems = function() {
     const descEn = (item.description?.en || "").toLowerCase();
     const id = item.id.toLowerCase();
     
-    // Virtual weapon search keyword mapping
-    const isWeapon = isWeaponItem(item);
-    const matchesVirtualWeapon = (searchVal === 'weapon' || searchVal === 'gun' || searchVal === 'weapons' || searchVal === 'guns') && isWeapon;
-    
-    const matchesSearch = nameEn.includes(searchVal) || descEn.includes(searchVal) || id.includes(searchVal) || matchesVirtualWeapon;
+    const matchesSearch = nameEn.includes(searchVal) || descEn.includes(searchVal) || id.includes(searchVal) || matchesVirtualKeywords(item, searchVal);
 
     // Category match
     let matchesType = false;
