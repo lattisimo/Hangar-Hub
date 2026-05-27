@@ -65,7 +65,7 @@ function matchesVirtualKeywords(item, query) {
   if (!query) return false;
   
   // 1. Healing & Medical
-  if (['heal', 'healing', 'meds', 'medical'].includes(query)) {
+  if (['heal', 'heals', 'healing', 'meds', 'medical'].includes(query)) {
     return [
       'adrenaline_shot', 'bandage', 'defibrillator', 'herbal_bandage', 'sterilized_bandage', 'vita_shot', 'vita_spray'
     ].includes(item.id);
