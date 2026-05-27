@@ -113,7 +113,12 @@ window.filterCraftingOptions = function() {
   const filtered = craftableItems.filter(item => {
     const name = (item.name?.en || item.id).toLowerCase();
     const type = (item.type || "").toLowerCase();
-    return name.includes(query) || type.includes(query);
+    
+    // Virtual weapon search keyword mapping
+    const isWeapon = isWeaponItem(item);
+    const matchesVirtualWeapon = (query === 'weapon' || query === 'gun' || query === 'weapons' || query === 'guns') && isWeapon;
+    
+    return name.includes(query) || type.includes(query) || matchesVirtualWeapon;
   });
   
   if (filtered.length === 0) {
@@ -244,7 +249,12 @@ window.filterItems = function() {
     const nameEn = (item.name?.en || "").toLowerCase();
     const descEn = (item.description?.en || "").toLowerCase();
     const id = item.id.toLowerCase();
-    const matchesSearch = nameEn.includes(searchVal) || descEn.includes(searchVal) || id.includes(searchVal);
+    
+    // Virtual weapon search keyword mapping
+    const isWeapon = isWeaponItem(item);
+    const matchesVirtualWeapon = (searchVal === 'weapon' || searchVal === 'gun' || searchVal === 'weapons' || searchVal === 'guns') && isWeapon;
+    
+    const matchesSearch = nameEn.includes(searchVal) || descEn.includes(searchVal) || id.includes(searchVal) || matchesVirtualWeapon;
 
     // Category match
     let matchesType = false;
