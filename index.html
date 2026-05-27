@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ARC Raiders Hangar Hub - Crafting & Stash Strategist</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <header>
+    <div class="logo-container">
+      <div class="logo-icon">ARC</div>
+      <div class="logo-text">
+        <h1>Hangar Hub</h1>
+        <p>Speranza Workshop Terminal v1.22</p>
+      </div>
+    </div>
+
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="switchTab('database-tab', this)">
+        <i class="fa-solid fa-database"></i> Database
+      </button>
+      <button class="tab-btn" onclick="switchTab('crafting-tab', this)">
+        <i class="fa-solid fa-screwdriver-wrench"></i> Crafting Resolver
+      </button>
+      <button class="tab-btn" onclick="switchTab('strategy-tab', this)">
+        <i class="fa-solid fa-boxes-stacked"></i> Stash Strategist
+      </button>
+      <button class="tab-btn" onclick="switchTab('backpack-tab', this)">
+        <i class="fa-solid fa-briefcase"></i> Backpack Strategist
+      </button>
+      <button class="tab-btn" onclick="switchTab('skills-tab', this)">
+        <i class="fa-solid fa-network-wired"></i> Skill Planner
+      </button>
+    </div>
+
+    <div class="status-badge">
+      <div class="status-indicator"></div>
+      SYS ONLINE - PLAYTEST DATA
+    </div>
+  </header>
+
+  <main>
+    <!-- DATABASE TAB -->
+    <div id="database-tab" class="tab-content active">
+      <div class="db-container">
+        <!-- Sidebar filters -->
+        <aside class="sidebar-panel">
+          <div class="panel-header">
+            <span>Filters</span>
+            <i class="fa-solid fa-sliders"></i>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label" for="search-box">Search Items</label>
+            <div class="search-input-wrapper">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="search-box" placeholder="Search by name, desc..." oninput="filterItems()">
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label" for="type-filter">Category</label>
+            <select id="type-filter" onchange="filterItems()">
+              <option value="all">All Categories</option>
+              <option value="Weapon">Weapons</option>
+              <option value="Ammunition">Ammunition</option>
+              <option value="Quick Use">Consumables / Quick Use</option>
+              <option value="Basic Material">Basic Materials</option>
+              <option value="Topside Material">Topside Materials</option>
+              <option value="Refined Material">Refined Materials</option>
+              <option value="Recyclable">Recyclables (Junk)</option>
+              <option value="Gadget">Gadgets</option>
+              <option value="Modification">Weapon Mods & Attachments</option>
+              <option value="Blueprint">Blueprints</option>
+              <option value="Key">Access Keys & Codes</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label" for="rarity-filter">Rarity</label>
+            <select id="rarity-filter" onchange="filterItems()">
+              <option value="all">All Rarities</option>
+              <option value="Common">Common</option>
+              <option value="Uncommon">Uncommon</option>
+              <option value="Rare">Rare</option>
+              <option value="Epic">Epic</option>
+              <option value="Legendary">Legendary</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label" for="craftable-filter">Craftable</label>
+            <select id="craftable-filter" onchange="filterItems()">
+              <option value="all">Any Craftability</option>
+              <option value="yes">Craftable Only</option>
+              <option value="no">Non-Craftable Only</option>
+            </select>
+          </div>
+
+          <div class="stash-summary-card">
+            <div class="panel-header" style="border:none; padding-left:0; font-size:0.85rem; color:var(--text-secondary);">
+              <span>Database Stats</span>
+            </div>
+            <div class="stash-row">
+              <span>Total Items</span>
+              <span id="stat-total-items">-</span>
+            </div>
+            <div class="stash-row">
+              <span>Craftable Blueprints</span>
+              <span id="stat-craftable-items">-</span>
+            </div>
+            <div class="stash-row">
+              <span>Recyclables</span>
+              <span id="stat-recyclable-items">-</span>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Items grid -->
+        <section class="db-main-content">
+          <div class="items-grid-container" id="items-grid">
+            <!-- Dynamic items load here -->
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- CRAFTING RESOLVER TAB -->
+    <div id="crafting-tab" class="tab-content">
+      <div class="crafting-container">
+        <!-- Selection Sidebar -->
+        <aside class="sidebar-panel">
+          <div class="panel-header">
+            <span>Target Gear</span>
+            <i class="fa-solid fa-bullseye"></i>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label" for="crafting-search-filter">Search Blueprint</label>
+            <div class="search-input-wrapper" style="margin-bottom: 0.5rem;">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="crafting-search-filter" placeholder="Type to filter list..." oninput="filterCraftingOptions()">
+            </div>
+            <select id="crafting-search" onchange="onSelectCraftItem(this.value)">
+              <!-- Options loaded dynamically -->
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label">Batch Quantity</label>
+            <div class="qty-selector">
+              <button class="qty-btn" onclick="adjustQty(-1)">-</button>
+              <input type="number" id="craft-qty" class="qty-input" value="1" min="1" oninput="onQtyChange(this.value)">
+              <button class="qty-btn" onclick="adjustQty(1)">+</button>
+            </div>
+          </div>
+
+          <div class="stash-summary-card" id="recipe-quick-info" style="display:none;">
+            <div class="stash-row">
+              <span>Category</span>
+              <span id="recipe-cat">-</span>
+            </div>
+            <div class="stash-row">
+              <span>Sell Value</span>
+              <span id="recipe-val">-</span>
+            </div>
+            <div class="stash-row">
+              <span>Weight (Single)</span>
+              <span id="recipe-weight">-</span>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Resolver Tree & Breakdown -->
+        <section class="resolver-output">
+          <div class="panel-header" id="resolver-title">
+            <span>Crafting Recipe Breakdown</span>
+          </div>
+
+          <div class="split-panels">
+            <!-- Left panel: Recursive Recipe Tree -->
+            <div class="tree-container">
+              <h3 class="filter-label" style="margin-bottom: 0.75rem;">Interactive Crafting Tree</h3>
+              <div id="crafting-tree">
+                <!-- Recursive tree generated here -->
+              </div>
+            </div>
+
+            <!-- Right panel: Total Raw materials summary -->
+            <div class="raw-materials-panel">
+              <h3 class="filter-label">Aggregated Base Materials</h3>
+              <div class="totals-summary">
+                <span>Total Unique Base Items: <strong id="base-count">0</strong></span>
+                <span>Est. Cargo Weight: <strong id="base-weight">0.00 kg</strong></span>
+              </div>
+              <div class="material-list" id="raw-materials-list">
+                <!-- Flat basic materials list loaded here -->
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- INVENTORY STRATEGY TAB -->
+    <div id="strategy-tab" class="tab-content">
+      <div class="strategy-container">
+        <!-- Configuration/Metrics sidebar -->
+        <aside class="sidebar-panel">
+          <div class="panel-header">
+            <span>Inventory Setup</span>
+            <i class="fa-solid fa-gears"></i>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label" for="progression-mode">Progression Stage</label>
+            <select id="progression-mode" onchange="runStrategyAudit()">
+              <option value="early">(Recommended) Early Game - Hideout & Upgrades</option>
+              <option value="late">Late Game - Min-Max Gear & Weapon Crafting</option>
+            </select>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-title">Safe To Recycle</div>
+            <div class="metric-value" id="count-safe-recycle">0</div>
+            <span style="font-size:0.7rem; color:var(--text-secondary);">Items labeled as "Recyclable" with low upgrade value.</span>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-title">High Sell Value</div>
+            <div class="metric-value" id="count-high-sell">0</div>
+            <span style="font-size:0.7rem; color:var(--text-secondary);">Items worth >500 credits with low crafting value.</span>
+          </div>
+        </aside>
+
+        <!-- Main Strategy Grid/Table -->
+        <section class="strategy-dashboard">
+          <div class="panel-header">
+            <span>Stash Management & Recycle Strategy</span>
+            <i class="fa-solid fa-list-check"></i>
+          </div>
+
+          <div style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6;">
+            Below is an automated audit of loot in <strong>ARC Raiders</strong> based on item utility. 
+            Use the search box below to instantly check a specific item's loot recommendation and why you should keep, sell, or recycle it.
+          </div>
+
+          <div class="search-input-wrapper" style="max-width: 400px; margin-bottom: 0.5rem;">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="strategy-search" placeholder="Type item name to audit..." oninput="filterStrategyTable()">
+          </div>
+
+          <div style="overflow-x: auto; max-height: calc(100vh - 350px);">
+            <table class="audit-table">
+              <thead>
+                <tr>
+                  <th>Item Name</th>
+                  <th>Type</th>
+                  <th>Value</th>
+                  <th>Recycle Yields</th>
+                  <th>Stash Action</th>
+                  <th>Primary Reason / Usage</th>
+                </tr>
+              </thead>
+              <tbody id="strategy-table-body">
+                <!-- Audited items loaded dynamically -->
+              </tbody>
+            </table>
+        </section>
+      </div>
+    </div>
+
+    <!-- BACKPACK STRATEGIST TAB -->
+    <div id="backpack-tab" class="tab-content">
+      <div class="backpack-container">
+        <!-- Backpack Simulator Sidebar -->
+        <aside class="sidebar-panel">
+          <div class="panel-header">
+            <span>Backpack Loadout</span>
+            <i class="fa-solid fa-briefcase"></i>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label" for="equipped-augment">Equipped Carry Augment</label>
+            <select id="equipped-augment" onchange="updateBackpackSimulator()">
+              <option value="35">Free Loadout (35.0 kg)</option>
+              <option value="50">Looting Mk. 1 (50.0 kg)</option>
+              <option value="60">Looting Mk. 2 (60.0 kg)</option>
+              <option value="65">Looting Mk. 3 (Safekeeper) (65.0 kg)</option>
+              <option value="70" selected>Looting Mk. 3 (Cautious) (70.0 kg)</option>
+              <option value="80">Looting Mk. 3 (Survivor) (80.0 kg)</option>
+              <option value="40">Tactical/Combat Mk. 1 (40.0 kg)</option>
+              <option value="45">Tactical/Combat Mk. 2 (45.0 kg)</option>
+              <option value="55">Tactical/Combat Mk. 3 (55.0 kg)</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label" for="skill-broad-shoulders">Broad Shoulders Skill</label>
+            <select id="skill-broad-shoulders" onchange="updateBackpackSimulator()">
+              <option value="0" selected>No Skill (+0.0 kg)</option>
+              <option value="5">Level 1 (+5.0 kg)</option>
+              <option value="10">Level 2 (+10.0 kg)</option>
+              <option value="15">Level 3 (+15.0 kg)</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label" for="primary-weapon-select">Primary Weapon (Equipped)</label>
+            <select id="primary-weapon-select" onchange="updateBackpackSimulator()">
+              <!-- Loaded dynamically -->
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label" for="secondary-weapon-select">Secondary Weapon (Equipped)</label>
+            <select id="secondary-weapon-select" onchange="updateBackpackSimulator()">
+              <!-- Loaded dynamically -->
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label" for="skill-loaded-arms">Loaded Arms Skill (Weapon Wt. Reduction)</label>
+            <select id="skill-loaded-arms" onchange="updateBackpackSimulator()">
+              <option value="1.0" selected>No Skill (100% Weight)</option>
+              <option value="0.9">Level 1 (90% Weight)</option>
+              <option value="0.8">Level 2 (80% Weight)</option>
+              <option value="0.75">Level 3 (75% Weight)</option>
+            </select>
+          </div>
+
+          <div style="margin-bottom: 1rem;">
+            <div class="totals-summary" style="margin-bottom:0.25rem;">
+              <span>Cargo Weight: <strong id="pack-weight-text">0.00 / 25.00 kg</strong></span>
+            </div>
+            <div class="weight-bar-bg">
+              <div class="weight-bar-fill" id="pack-weight-bar"></div>
+            </div>
+            <div class="grid-2col" style="margin-top: 0.5rem;">
+              <div class="detail-pill" style="padding: 0.5rem;">
+                <span>Total Value</span>
+                <span id="pack-total-value">0 c</span>
+              </div>
+              <div class="detail-pill" style="padding: 0.5rem;">
+                <span>Avg Density</span>
+                <span id="pack-avg-density">0 c/kg</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel-header" style="border:none; padding-left:0; font-size:0.85rem; color:var(--text-secondary); padding-bottom:0.25rem;">
+            <span>Current Backpack Loot</span>
+          </div>
+          <div class="material-list" id="pack-items-list" style="max-height: 250px; overflow-y: auto; background: rgba(0,0,0,0.1); border-radius: 4px; padding: 0.5rem; border: 1px solid rgba(255,255,255,0.03);">
+            <div style="color:var(--text-muted); text-align:center; padding: 1.5rem; font-size:0.75rem;">Your backpack is empty. Add items from the directory to simulate.</div>
+          </div>
+
+          <!-- Optimization advice card -->
+          <div class="advice-card" id="pack-advice-card">
+            <div class="advice-title" id="pack-advice-title">
+              <i class="fa-solid fa-circle-info"></i> In-Round Advice
+            </div>
+            <div class="advice-text" id="pack-advice-text">
+              Your backpack is empty. Pick up loot on your raid, and this strategist will guide you on what to keep, drop, or salvage in-round to maximize extraction profits.
+            </div>
+          </div>
+        </aside>
+
+        <!-- Directory section -->
+        <section class="strategy-dashboard">
+          <div class="panel-header">
+            <span>In-Round Loot Directory & Salvage Analyzer</span>
+            <i class="fa-solid fa-list-check"></i>
+          </div>
+
+          <div style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6;">
+            During a raid (topside), <strong>salvaging</strong> an item in-round yields only about 50% of the materials compared to full-efficiency recycling back in <strong>Speranza</strong>. 
+            Use this directory to analyze the value density of loot, view salvage yields, and decide what to drop or salvage in-round when cargo capacity is exceeded.
+          </div>
+
+          <div class="search-input-wrapper" style="max-width: 400px; margin-bottom: 0.5rem;">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="backpack-search" placeholder="Search item to simulate..." oninput="filterBackpackTable()">
+          </div>
+
+          <div style="overflow-x: auto; max-height: calc(100vh - 350px);">
+            <table class="audit-table">
+              <thead>
+                <tr>
+                  <th>Item Name</th>
+                  <th>Weight</th>
+                  <th>Value</th>
+                  <th>Density</th>
+                  <th>In-Round Salvage Yield</th>
+                  <th>In-Round Recommendation</th>
+                  <th>Simulate</th>
+                </tr>
+              </thead>
+              <tbody id="backpack-table-body">
+                <!-- Loaded dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- SKILL PLANNER TAB -->
+    <div id="skills-tab" class="tab-content">
+      <div class="skills-container">
+        <!-- Sidebar - Build Selector -->
+        <aside class="sidebar-panel">
+          <div class="panel-header">
+            <span>Playstyle Archetypes</span>
+            <i class="fa-solid fa-people-group"></i>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:0.75rem; margin-bottom:1.5rem;" id="build-list-container">
+            <!-- Archetype buttons loaded dynamically -->
+          </div>
+
+          <!-- Expedition completed dropdown -->
+          <div class="filter-group" style="margin-bottom:1.5rem;">
+            <label class="filter-label" for="expeditions-select">Expeditions Completed</label>
+            <select id="expeditions-select" onchange="updateExpeditionLimit()">
+              <option value="5">0 - 4 Expeditions: Rookie (5 pts)</option>
+              <option value="15">5 - 9 Expeditions: Raider-in-Training (15 pts)</option>
+              <option value="25">10 - 14 Expeditions: Active Scrapper (25 pts)</option>
+              <option value="35">15 - 19 Expeditions: Experienced Raider (35 pts)</option>
+              <option value="45">20 - 24 Expeditions: Veteran Raider (45 pts)</option>
+              <option value="55" selected>25+ Expeditions: Speranza Elite (55 pts)</option>
+            </select>
+          </div>
+
+          <!-- Build Stats & Synergy Card -->
+          <div class="detail-section" style="margin-top:0;">
+            <div class="detail-section-title">
+              <i class="fa-solid fa-chart-pie"></i> Build Synergies
+            </div>
+            <div class="grid-2col" style="margin-bottom:1rem;">
+              <div class="detail-pill" style="padding:0.5rem;">
+                <span>Total Points</span>
+                <span id="build-total-points">45</span>
+              </div>
+              <div class="detail-pill" style="padding:0.5rem;">
+                <span>Tier Reached</span>
+                <span id="build-highest-tier">Tier 3</span>
+              </div>
+            </div>
+            <div class="detail-pill" style="margin-bottom:0.5rem; display:block; padding:0.5rem 0.75rem;">
+              <div style="font-size:0.6rem; color:var(--text-muted); text-transform:uppercase;">Recommended Augment</div>
+              <div style="font-size:0.8rem; font-weight:700; color:var(--accent-color); margin-top:0.15rem;" id="build-rec-augment">Looting Mk. 3 (Survivor)</div>
+            </div>
+            <div class="detail-pill" style="display:block; padding:0.5rem 0.75rem; margin-bottom:0.5rem;">
+              <div style="font-size:0.6rem; color:var(--text-muted); text-transform:uppercase;">Recommended Weapons</div>
+              <div style="font-size:0.8rem; font-weight:700; color:var(--text-secondary); margin-top:0.15rem;" id="build-rec-weapons">Tempest I, Burletta I</div>
+            </div>
+            <div class="detail-pill" id="expedition-advice-pill" style="margin-bottom:0.5rem; display:block; padding:0.5rem 0.75rem;">
+              <div style="font-size:0.6rem; color:var(--text-muted); text-transform:uppercase;">Expedition Strategy</div>
+              <div style="font-size:0.75rem; font-weight:500; color:var(--text-secondary); margin-top:0.15rem; line-height:1.3;" id="expedition-advice-text">-</div>
+            </div>
+            <button class="action-btn sec-btn" id="reset-build-btn" style="margin-top:1rem; display:none;" onclick="resetCustomBuild()">
+              <i class="fa-solid fa-rotate-left"></i> Reset Custom Build
+            </button>
+          </div>
+        </aside>
+
+        <!-- Main Panel - Skill Tree Columns -->
+        <section class="strategy-dashboard">
+          <div class="panel-header">
+            <span id="active-build-title">Pure Harvester Build Matrix</span>
+            <i class="fa-solid fa-diagram-project"></i>
+          </div>
+
+          <div style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 1.5rem;" id="active-build-desc">
+            Focuses heavily on maximizing carry weight capacity, silent scavenging speed, and stamina recovery. Perfect for solo farming runs or the designated pack-mule in co-op.
+          </div>
+
+          <!-- Tree Columns Layout -->
+          <div class="tree-columns-grid">
+            <!-- Conditioning Column -->
+            <div class="tree-column conditioning">
+              <div class="tree-column-header">
+                <i class="fa-solid fa-shield-halved"></i> Conditioning
+                <span class="tree-point-badge green" id="points-conditioning">0 / 76</span>
+              </div>
+              <div class="tree-nodes-list" id="nodes-conditioning">
+                <!-- Nodes loaded dynamically -->
+              </div>
+            </div>
+
+            <!-- Mobility Column -->
+            <div class="tree-column mobility">
+              <div class="tree-column-header">
+                <i class="fa-solid fa-person-running"></i> Mobility
+                <span class="tree-point-badge yellow" id="points-mobility">0 / 76</span>
+              </div>
+              <div class="tree-nodes-list" id="nodes-mobility">
+                <!-- Nodes loaded dynamically -->
+              </div>
+            </div>
+
+            <!-- Survival Column -->
+            <div class="tree-column survival">
+              <div class="tree-column-header">
+                <i class="fa-solid fa-campground"></i> Survival
+                <span class="tree-point-badge red" id="points-survival">0 / 76</span>
+              </div>
+              <div class="tree-nodes-list" id="nodes-survival">
+                <!-- Nodes loaded dynamically -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Skill Detail Drawer Display -->
+          <div class="advice-card" style="margin-top: 1.5rem;" id="skill-detail-panel">
+            <div class="advice-title">
+              <i class="fa-solid fa-circle-question"></i> Skill Details
+            </div>
+            <div class="advice-text" style="font-size: 0.85rem;" id="skill-detail-text">
+              Hover over or click any skill node in the planner columns to view its full mechanical description, tier requirements, and active bonuses.
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <!-- FOOTER CREDITS & ATTRIBUTION -->
+  <footer class="app-footer">
+    <p>
+      ARC Raiders Hangar Hub is an unofficial, fan-made utility. All game assets, names, icons, and trademarks are copyright to 
+      <a href="https://www.embark-studios.com/" target="_blank">Embark Studios</a>.
+    </p>
+    <p>
+      Item database powered by <a href="https://github.com/Teyk0o/ARDB" target="_blank">Teyk0o/ARDB</a>. 
+      Visual assets from <a href="https://arctracker.io" target="_blank">ARCTracker.io</a>. 
+      Icons by <a href="https://fontawesome.com" target="_blank">FontAwesome</a>. 
+      Fonts by <a href="https://fonts.google.com" target="_blank">Google Fonts</a>.
+    </p>
+  </footer>
+
+  <!-- DETAIL DRAWER (SLIDES IN) -->
+  <div class="drawer-backdrop" id="drawer-backdrop" onclick="closeDetailDrawer()"></div>
+  <div class="detail-drawer" id="detail-drawer">
+    <div class="drawer-header">
+      <div>
+        <div class="rarity-badge" id="detail-rarity" style="display:inline-block; margin-bottom:0.5rem;">COMMON</div>
+        <h2 class="detail-name" id="detail-item-name">Item Name</h2>
+        <span class="item-type" id="detail-item-type">Item Type</span>
+      </div>
+      <button class="close-btn" onclick="closeDetailDrawer()">&times;</button>
+    </div>
+
+    <div class="detail-image-container" id="detail-image-container">
+      <img id="detail-image" src="" alt="Item Artwork" onerror="this.parentElement.style.display='none';">
+    </div>
+
+    <p class="detail-description" id="detail-desc">No description available.</p>
+
+    <!-- Basic Stats -->
+    <div class="detail-section">
+      <div class="detail-section-title">
+        <i class="fa-solid fa-chart-simple"></i> Item Properties
+      </div>
+      <div class="grid-2col">
+        <div class="detail-pill">
+          <span>Credit Value</span>
+          <span id="detail-val">0</span>
+        </div>
+        <div class="detail-pill">
+          <span>Weight</span>
+          <span id="detail-weight">0.00 kg</span>
+        </div>
+        <div class="detail-pill">
+          <span>Stack Size</span>
+          <span id="detail-stack">0</span>
+        </div>
+        <div class="detail-pill">
+          <span>Added In</span>
+          <span id="detail-added">1.0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Crafting Recipe (if craftable) -->
+    <div class="detail-section" id="detail-crafting-section" style="display:none;">
+      <div class="detail-section-title">
+        <i class="fa-solid fa-screwdriver-wrench"></i> Workbench Recipe
+      </div>
+      <div class="material-list" id="detail-recipe-list">
+        <!-- Recipe components here -->
+      </div>
+      <button class="action-btn" id="resolve-tree-btn">Resolve Crafting Tree</button>
+    </div>
+
+    <!-- Recycle yield -->
+    <div class="detail-section" id="detail-recycle-section" style="display:none;">
+      <div class="detail-section-title">
+        <i class="fa-solid fa-recycle"></i> Recycling Outputs (Deconstruct)
+      </div>
+      <div class="material-list" id="detail-recycle-list">
+        <!-- Recycle yields here -->
+      </div>
+    </div>
+
+    <!-- Vendors -->
+    <div class="detail-section" id="detail-vendor-section" style="display:none;">
+      <div class="detail-section-title">
+        <i class="fa-solid fa-shop"></i> Vendor Availability
+      </div>
+      <div class="material-list" id="detail-vendor-list">
+        <!-- Vendor list here -->
+      </div>
+    </div>
+  </div>
+
+  <script src="items.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
