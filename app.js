@@ -1508,9 +1508,14 @@ window.selectBuild = function(buildIndex) {
   // Calculate total allocated points
   const totalAllocated = build.points.conditioning + build.points.mobility + build.points.survival;
   
-  // Expedition limit logic
-  const expeditionsSelect = document.getElementById('expeditions-select');
-  const maxPoints = expeditionsSelect ? parseInt(expeditionsSelect.value) : 55;
+  // Expedition limit logic (Level + Bonus points)
+  const levelInput = document.getElementById('character-level-input');
+  const bonusInput = document.getElementById('expedition-bonus-input');
+  const charLevel = levelInput ? parseInt(levelInput.value) || 1 : 75;
+  const bonusPoints = bonusInput ? parseInt(bonusInput.value) || 0 : 0;
+  
+  const pointsFromLevel = Math.max(0, charLevel - 1);
+  const maxPoints = pointsFromLevel + bonusPoints;
   
   const pointsCounter = document.getElementById('build-total-points');
   if (pointsCounter) {
@@ -1527,17 +1532,17 @@ window.selectBuild = function(buildIndex) {
   const adviceTextEl = document.getElementById('expedition-advice-text');
   if (adviceTextEl) {
     if (totalAllocated > maxPoints) {
-      adviceTextEl.innerHTML = `<span style="color:#ef4444; font-weight:700;">LIMIT EXCEEDED!</span> Complete more expeditions or remove ${totalAllocated - maxPoints} pts to activate this setup.`;
+      adviceTextEl.innerHTML = `<span style="color:#ef4444; font-weight:700;">LIMIT EXCEEDED!</span> Lower your requirements or remove ${totalAllocated - maxPoints} pts to activate this setup.`;
     } else {
-      if (maxPoints === 5) {
+      if (maxPoints <= 10) {
         adviceTextEl.textContent = 'Rookie stage. Prioritize Tier 1 recovery or stamina skills first.';
-      } else if (maxPoints === 15) {
+      } else if (maxPoints <= 20) {
         adviceTextEl.textContent = 'Early Raider. Invest in Tier 1 passives and one core Tier 2 upgrade.';
-      } else if (maxPoints === 25) {
+      } else if (maxPoints <= 35) {
         adviceTextEl.textContent = 'Mid-game Scrapper. Balanced layout. Select up to one Tier 3 skill.';
-      } else if (maxPoints === 35) {
-        adviceTextEl.textContent = 'Experienced. Capped access to Tier 3 skills like Broad Shoulders.';
-      } else if (maxPoints === 45) {
+      } else if (maxPoints <= 50) {
+        adviceTextEl.textContent = 'Experienced Raider. High-efficiency skill branch investments.';
+      } else if (maxPoints <= 70) {
         adviceTextEl.textContent = 'Veteran level. Highly optimized hybrid layouts are available.';
       } else {
         adviceTextEl.textContent = 'Endgame build fully active. All synergy bonuses unlocked.';

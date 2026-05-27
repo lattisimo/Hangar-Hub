@@ -304,6 +304,25 @@ select option {
   color: var(--text-primary);
 }
 
+input[type="number"] {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  padding: 0.75rem 1rem;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  outline: none;
+  transition: all var(--transition-fast);
+  box-sizing: border-box;
+}
+
+input[type="number"]:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 8px rgba(102, 252, 241, 0.2);
+}
+
 /* Stash Summary inside Sidebar */
 .stash-summary-card {
   background: rgba(255, 255, 255, 0.02);

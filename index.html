@@ -422,17 +422,16 @@
             <!-- Archetype buttons loaded dynamically -->
           </div>
 
-          <!-- Expedition completed dropdown -->
+          <!-- Character Level input -->
+          <div class="filter-group" style="margin-bottom:1rem;">
+            <label class="filter-label" for="character-level-input">Character Level (1 - 75)</label>
+            <input type="number" id="character-level-input" value="75" min="1" max="75" oninput="updateExpeditionLimit()">
+          </div>
+
+          <!-- Expedition bonus input -->
           <div class="filter-group" style="margin-bottom:1.5rem;">
-            <label class="filter-label" for="expeditions-select">Expeditions Completed</label>
-            <select id="expeditions-select" onchange="updateExpeditionLimit()">
-              <option value="5">0 - 4 Expeditions: Rookie (5 pts)</option>
-              <option value="15">5 - 9 Expeditions: Raider-in-Training (15 pts)</option>
-              <option value="25">10 - 14 Expeditions: Active Scrapper (25 pts)</option>
-              <option value="35">15 - 19 Expeditions: Experienced Raider (35 pts)</option>
-              <option value="45">20 - 24 Expeditions: Veteran Raider (45 pts)</option>
-              <option value="55" selected>25+ Expeditions: Speranza Elite (55 pts)</option>
-            </select>
+            <label class="filter-label" for="expedition-bonus-input">Expedition Bonus Points</label>
+            <input type="number" id="expedition-bonus-input" value="0" min="0" max="50" oninput="updateExpeditionLimit()">
           </div>
 
           <!-- Build Stats & Synergy Card -->
