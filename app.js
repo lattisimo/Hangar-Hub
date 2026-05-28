@@ -1684,13 +1684,13 @@ const SKILL_BUILDS = [
     desc: 'Designed for maximizing scrap extraction. Focuses on carrying massive weight, looting silently, crouching stealthily, and evading combat patrols.',
     points: { conditioning: 10, mobility: 20, survival: 46 },
     augment: 'Looting Mk. 3 (Survivor)',
-    weapons: 'Renegade IV (Battle Rifle), Burletta II (Silenced Pistol)',
+    weapons: 'Renegade IV (Battle Rifle), Light Shield | Heals, Shield Rechargers, Ammo',
     unlocked: [],
     defaultAllocations: {
       silent_scavenger: 5, agile_croucher: 5, suffer_in_silence: 5, in_round_crafting: 1, looters_luck: 5,
       marathon_runner: 5, youthful_lungs: 5, nimble_climber: 5, slip_slide: 5, good_as_new: 5,
       three_deep_breaths: 5, one_raiders_scraps: 5, broad_shoulders: 3, looters_instincts: 5, security_breach: 1,
-      blast_born: 5, used_to_weight: 5, minesweeper: 1
+      a_little_extra: 5, used_to_weight: 5, minesweeper: 1
     },
     priorityList: [
       { id: 'silent_scavenger', target: 1 },
@@ -1713,7 +1713,7 @@ const SKILL_BUILDS = [
       { id: 'broad_shoulders', target: 3 },
       { id: 'looters_instincts', target: 5 },
       { id: 'security_breach', target: 1 },
-      { id: 'blast_born', target: 5 },
+      { id: 'a_little_extra', target: 5 },
       { id: 'used_to_weight', target: 5 }
     ],
     branchPriority: ['survival', 'mobility', 'conditioning']
@@ -1724,11 +1724,11 @@ const SKILL_BUILDS = [
     desc: 'Optimized for heavy combat, door-breaching, and team defense. Negates speed penalties when carrying shields, resists blasts, and recovers stamina under fire.',
     points: { conditioning: 49, mobility: 22, survival: 5 },
     augment: 'Tactical Mk. 3 (Defensive)',
-    weapons: 'Torrente IV (LMG), Vulcano IV (Shotgun)',
+    weapons: 'Torrente IV (LMG), Heavy Shield | Surge Medical Kits, Shield Rechargers, Heavy Ammo',
     unlocked: [],
     defaultAllocations: {
       used_to_weight: 5, blast_born: 5, effortless_swing: 5, unburdened_roll: 1, loaded_arms: 1,
-      gentle_pressure: 4, turtle_crawl: 5, marathon_runner: 5, youthful_lungs: 5, nimble_climber: 5,
+      a_little_extra: 4, turtle_crawl: 5, marathon_runner: 5, youthful_lungs: 5, nimble_climber: 5,
       slip_slide: 5, heroic_leap: 2, sky_clearing_swing: 5, proficient_pryer: 5, fight_or_flight: 5,
       downed_determined: 5, survivor_stamina: 1, back_on_your_feet: 1, flyswatter: 1, agile_croucher: 5
     },
@@ -1742,7 +1742,7 @@ const SKILL_BUILDS = [
       { id: 'effortless_swing', target: 5 },
       { id: 'unburdened_roll', target: 1 },
       { id: 'loaded_arms', target: 1 },
-      { id: 'gentle_pressure', target: 4 },
+      { id: 'a_little_extra', target: 4 },
       { id: 'turtle_crawl', target: 5 },
       { id: 'marathon_runner', target: 5 },
       { id: 'youthful_lungs', target: 5 },
@@ -1766,13 +1766,13 @@ const SKILL_BUILDS = [
     desc: 'Unmatched speed and vertical parkour agility. Slides, vaults, and climbs through ruins to locate drop zones and extraction points before patrol bots spot you.',
     points: { conditioning: 10, mobility: 45, survival: 21 },
     augment: 'Looting Mk. 3 (Cautious)',
-    weapons: 'Stitcher IV (SMG), Burletta IV (Pistol)',
+    weapons: 'Stitcher IV (SMG), Light Shield | Stimulants, Heals, Standard Ammo',
     unlocked: [],
     defaultAllocations: {
       marathon_runner: 5, youthful_lungs: 5, nimble_climber: 5, vigorous_vaulter: 1, slip_slide: 5,
       heroic_leap: 5, agile_croucher: 5, silent_scavenger: 5, good_as_new: 5, in_round_crafting: 1,
       looters_luck: 5, effortless_roll: 5, ready_to_roll: 5, carry_momentum: 1, sturdy_ankles: 1,
-      vaults_on_vaults: 1, vault_spring: 1, off_the_wall: 5, blast_born: 5, used_to_weight: 5
+      vaults_on_vaults: 1, vault_spring: 1, off_the_wall: 5, effortless_swing: 5, used_to_weight: 5
     },
     priorityList: [
       { id: 'marathon_runner', target: 1 },
@@ -1797,7 +1797,7 @@ const SKILL_BUILDS = [
       { id: 'vaults_on_vaults', target: 1 },
       { id: 'vault_spring', target: 1 },
       { id: 'off_the_wall', target: 5 },
-      { id: 'blast_born', target: 5 },
+      { id: 'effortless_swing', target: 5 },
       { id: 'used_to_weight', target: 5 }
     ],
     branchPriority: ['mobility', 'survival', 'conditioning']
@@ -1808,11 +1808,11 @@ const SKILL_BUILDS = [
     desc: 'Sneaks past ARC defenses, opens secure doors/vaults silently, and escapes with rare blueprints. Ideal for high-risk, low-detection looting raids.',
     points: { conditioning: 21, mobility: 10, survival: 45 },
     augment: 'Looting Mk. 3 (Safekeeper)',
-    weapons: 'Osprey IV (Sniper), Burletta II (Silenced)',
+    weapons: 'Osprey IV (Sniper), Light Shield | Silenced Pistol, Decoys, Ammo',
     unlocked: [],
     defaultAllocations: {
       silent_scavenger: 5, agile_croucher: 5, suffer_in_silence: 5, in_round_crafting: 1, looters_luck: 5,
-      three_deep_breaths: 5, blast_born: 5, used_to_weight: 5, effortless_swing: 5, gentle_pressure: 5,
+      three_deep_breaths: 5, a_little_extra: 5, used_to_weight: 5, effortless_swing: 5, gentle_pressure: 5,
       marathon_runner: 5, youthful_lungs: 5, good_as_new: 5, one_raiders_scraps: 5, broad_shoulders: 3,
       looters_instincts: 5, minesweeper: 1, proficient_pryer: 1
     },
@@ -1827,7 +1827,7 @@ const SKILL_BUILDS = [
       { id: 'in_round_crafting', target: 1 },
       { id: 'looters_luck', target: 5 },
       { id: 'three_deep_breaths', target: 5 },
-      { id: 'blast_born', target: 5 },
+      { id: 'a_little_extra', target: 5 },
       { id: 'used_to_weight', target: 5 },
       { id: 'effortless_swing', target: 5 },
       { id: 'gentle_pressure', target: 5 },
@@ -1848,11 +1848,11 @@ const SKILL_BUILDS = [
     desc: 'Controls zones and supports squad survival by field-crafting traps, decoys, and healing sprays topside. Highly self-sufficient in late raids.',
     points: { conditioning: 19, mobility: 15, survival: 42 },
     augment: 'Tactical Mk. 3 (Healing)',
-    weapons: 'Rattler IV (Assault Rifle), Wasp Driver (Special)',
+    weapons: 'Rattler IV (Assault Rifle), Medium Shield | Nanite Healers, Deployable Turrets, Ammo',
     unlocked: [],
     defaultAllocations: {
       agile_croucher: 5, silent_scavenger: 5, good_as_new: 5, in_round_crafting: 1, three_deep_breaths: 5,
-      blast_born: 5, used_to_weight: 5, a_little_extra: 5, proficient_pryer: 4, marathon_runner: 5,
+      effortless_swing: 5, used_to_weight: 5, a_little_extra: 5, proficient_pryer: 4, marathon_runner: 5,
       youthful_lungs: 5, nimble_climber: 5, one_raiders_scraps: 5, suffer_in_silence: 5, looters_luck: 5,
       traveling_tinkerer: 1, broad_shoulders: 3, minesweeper: 1, security_breach: 1
     },
@@ -1866,7 +1866,7 @@ const SKILL_BUILDS = [
       { id: 'good_as_new', target: 5 },
       { id: 'in_round_crafting', target: 1 },
       { id: 'three_deep_breaths', target: 5 },
-      { id: 'blast_born', target: 5 },
+      { id: 'effortless_swing', target: 5 },
       { id: 'used_to_weight', target: 5 },
       { id: 'a_little_extra', target: 5 },
       { id: 'proficient_pryer', target: 4 },
@@ -1882,6 +1882,94 @@ const SKILL_BUILDS = [
       { id: 'security_breach', target: 1 }
     ],
     branchPriority: ['survival', 'conditioning', 'mobility']
+  },
+  {
+    name: 'Naked Scrapper',
+    summary: 'Zero-to-Hero fists & stealth scavenger',
+    desc: 'Designed for extreme Zero-to-Hero runs. Starts with no weapons, shields, or custom augments. Relies on melee damage (fists), fast crouching, silent search, and traversal stamina to survive and carry found loot home.',
+    points: { conditioning: 15, mobility: 15, survival: 46 },
+    augment: 'None (Bare Bones)',
+    weapons: 'None (Bare Bones) | Fists / Melee',
+    unlocked: [],
+    defaultAllocations: {
+      effortless_swing: 5, sky_clearing_swing: 5, a_little_extra: 5,
+      marathon_runner: 5, youthful_lungs: 5, nimble_climber: 5,
+      agile_croucher: 5, silent_scavenger: 5, suffer_in_silence: 5, good_as_new: 5,
+      in_round_crafting: 1, looters_luck: 5, minesweeper: 1, three_deep_breaths: 5,
+      one_raiders_scraps: 4, broad_shoulders: 3, looters_instincts: 5, security_breach: 1,
+      stubborn_mule: 1
+    },
+    priorityList: [
+      { id: 'effortless_swing', target: 1 },
+      { id: 'sky_clearing_swing', target: 1 },
+      { id: 'marathon_runner', target: 1 },
+      { id: 'youthful_lungs', target: 1 },
+      { id: 'agile_croucher', target: 1 },
+      { id: 'silent_scavenger', target: 1 },
+      { id: 'effortless_swing', target: 5 },
+      { id: 'sky_clearing_swing', target: 5 },
+      { id: 'a_little_extra', target: 5 },
+      { id: 'marathon_runner', target: 5 },
+      { id: 'youthful_lungs', target: 5 },
+      { id: 'nimble_climber', target: 5 },
+      { id: 'agile_croucher', target: 5 },
+      { id: 'silent_scavenger', target: 5 },
+      { id: 'suffer_in_silence', target: 5 },
+      { id: 'good_as_new', target: 5 },
+      { id: 'in_round_crafting', target: 1 },
+      { id: 'looters_luck', target: 5 },
+      { id: 'minesweeper', target: 1 },
+      { id: 'three_deep_breaths', target: 5 },
+      { id: 'one_raiders_scraps', target: 4 },
+      { id: 'broad_shoulders', target: 3 },
+      { id: 'looters_instincts', target: 5 },
+      { id: 'security_breach', target: 1 },
+      { id: 'stubborn_mule', target: 1 }
+    ],
+    branchPriority: ['survival', 'conditioning', 'mobility']
+  },
+  {
+    name: 'Freeloader',
+    summary: 'Low-risk starter kit value runner',
+    desc: 'Uses only the basic free gear provided by default (Free Loadout Augment, Ferro I, Hairpin I). Focuses on balanced stamina recovery, trap awareness, and scrap prying to secure profit with zero investment risk.',
+    points: { conditioning: 10, mobility: 20, survival: 46 },
+    augment: 'Free Loadout (Basic)',
+    weapons: 'Ferro I (Battle Rifle), Hairpin I (Pistol) | Bandages, Light/Medium Ammo',
+    unlocked: [],
+    defaultAllocations: {
+      blast_born: 5, a_little_extra: 5,
+      marathon_runner: 5, youthful_lungs: 5, nimble_climber: 5, slip_slide: 5,
+      agile_croucher: 5, silent_scavenger: 5, suffer_in_silence: 5, good_as_new: 5,
+      in_round_crafting: 1, looters_luck: 5, three_deep_breaths: 5, one_raiders_scraps: 5,
+      minesweeper: 1, broad_shoulders: 3, looters_instincts: 5, security_breach: 1
+    },
+    priorityList: [
+      { id: 'blast_born', target: 1 },
+      { id: 'a_little_extra', target: 1 },
+      { id: 'marathon_runner', target: 1 },
+      { id: 'youthful_lungs', target: 1 },
+      { id: 'agile_croucher', target: 1 },
+      { id: 'silent_scavenger', target: 1 },
+      { id: 'blast_born', target: 5 },
+      { id: 'a_little_extra', target: 5 },
+      { id: 'marathon_runner', target: 5 },
+      { id: 'youthful_lungs', target: 5 },
+      { id: 'nimble_climber', target: 5 },
+      { id: 'slip_slide', target: 5 },
+      { id: 'agile_croucher', target: 5 },
+      { id: 'silent_scavenger', target: 5 },
+      { id: 'suffer_in_silence', target: 5 },
+      { id: 'good_as_new', target: 5 },
+      { id: 'in_round_crafting', target: 1 },
+      { id: 'looters_luck', target: 5 },
+      { id: 'three_deep_breaths', target: 5 },
+      { id: 'one_raiders_scraps', target: 5 },
+      { id: 'minesweeper', target: 1 },
+      { id: 'broad_shoulders', target: 3 },
+      { id: 'looters_instincts', target: 5 },
+      { id: 'security_breach', target: 1 }
+    ],
+    branchPriority: ['survival', 'mobility', 'conditioning']
   },
   {
     name: 'Custom Build',
@@ -1945,7 +2033,7 @@ window.selectBuild = function(buildIndex) {
   const autoAdjustToggle = document.getElementById('auto-adjust-toggle');
   const isAutoAdjust = autoAdjustToggle ? autoAdjustToggle.checked : true;
   
-  const baseline = buildIndex === 5 ? customBaselineAllocations : (build.defaultAllocations || {});
+  const baseline = buildIndex === 7 ? customBaselineAllocations : (build.defaultAllocations || {});
   
   if (isAutoAdjust) {
     if (build.priorityList) {
@@ -2030,7 +2118,7 @@ window.selectBuild = function(buildIndex) {
   // Toggle reset button visibility
   const resetBtn = document.getElementById('reset-build-btn');
   if (resetBtn) {
-    resetBtn.style.display = buildIndex === 5 ? 'block' : 'none';
+    resetBtn.style.display = buildIndex === 7 ? 'block' : 'none';
   }
 
   // Render nodes for each branch
@@ -2266,16 +2354,16 @@ function updateBuildStats(build) {
 }
 
 window.toggleSkill = function(skillId, branchKey) {
-  const customBuild = SKILL_BUILDS[5];
+  const customBuild = SKILL_BUILDS[7];
   
-  // If active build is one of the templates (0-4), clone its allocations to baseline to start
-  if (activeBuildIndex < 5) {
+  // If active build is one of the templates (0-6), clone its allocations to baseline to start
+  if (activeBuildIndex < 7) {
     const activeTemplate = SKILL_BUILDS[activeBuildIndex];
     customBaselineAllocations = { ...(activeTemplate.defaultAllocations || activeTemplate.allocations || {}) };
     customBuild.allocations = { ...customBaselineAllocations };
     customBuild.augment = activeTemplate.augment;
     customBuild.weapons = activeTemplate.weapons;
-    activeBuildIndex = 5;
+    activeBuildIndex = 7;
   } else {
     // Sync the baseline with currently active/visible allocations to prevent stale/hidden state overrides
     customBaselineAllocations = { ...customBuild.allocations };
@@ -2405,14 +2493,14 @@ function checkSkillLockState(skill, allocations) {
 }
 
 window.resetCustomBuild = function() {
-  const customBuild = SKILL_BUILDS[5];
+  const customBuild = SKILL_BUILDS[7];
   customBuild.unlocked = [];
   customBuild.allocations = {};
   customBaselineAllocations = {};
   customBuild.weapons = 'None / Custom Loadout';
   customBuild.augment = 'None / Custom Loadout';
   updateBuildStats(customBuild);
-  selectBuild(5);
+  selectBuild(7);
 };
 
 window.updateExpeditionLimit = function() {
