@@ -12,7 +12,7 @@ This tool runs fully in the browser with **zero dependencies** and can be run of
 2. **Crafting Resolver**: A recursive calculator that decomposes any weapon or item blueprint down to its base raw materials. It recursively resolves predecessor weapon tiers (e.g. *Burletta IV* -> *Burletta III* -> *Burletta II* -> *Burletta I*) to sum up total scrap requirements.
 3. **Stash Strategist**: Heuristics to audit your storage boxes, telling you which items to **Keep** (for early/late game hideout upgrades), **Sell** (for credit premiums), or **Recycle** (for components).
 4. **Backpack Simulator & Salvage Analyzer**: Live simulation of your topside weight burden including equipped weapons (with *Loaded Arms* weight reduction skill support). Recommends what to drop first if overloaded, and highlights items that can be salvaged in-round to compress weight.
-5. **Skill Planner**: Select from 5 playstyle builds (*Pure Scavenger*, *Combat Vanguard*, *High-Mobility Scout*, *Stealth Infiltrator*, *Outpost Tinkerer*) or design your own *Custom Build*. Includes an **Expeditions Completed** selector to cap available points and display level-appropriate advice.
+5. **Skill Planner**: Select from 5 playstyle builds (*Pure Scavenger*, *Combat Vanguard*, *High-Mobility Scout*, *Stealth Infiltrator*, *Outpost Tinkerer*) or design your own *Custom Build*. Includes inputs for **Character Level** and **Expedition Bonus Points** to dynamically cap available points and display level-appropriate advice.
 
 ---
 
