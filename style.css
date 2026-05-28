@@ -1224,7 +1224,7 @@ input[type="number"]:focus {
   justify-content: space-between;
   align-items: center;
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   padding-bottom: 0.75rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   text-transform: uppercase;
@@ -1236,7 +1236,7 @@ input[type="number"]:focus {
 
 .tree-point-badge {
   font-family: var(--font-mono);
-  font-size: 0.7rem;
+  font-size: 0.78rem;
   padding: 0.1rem 0.35rem;
   border-radius: 4px;
   font-weight: 700;
@@ -1269,6 +1269,7 @@ input[type="number"]:focus {
 }
 
 .skill-node-card {
+  position: relative;
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 6px;
@@ -1296,6 +1297,11 @@ input[type="number"]:focus {
   transform: none;
   box-shadow: none;
   background: rgba(255, 255, 255, 0.02);
+  opacity: 1;
+}
+
+.skill-node-card.locked:hover > :not(.skill-tooltip) {
+  opacity: 0.25;
 }
 
 .skill-node-card.unlocked.conditioning {
@@ -1363,7 +1369,7 @@ input[type="number"]:focus {
 }
 
 .skill-node-name {
-  font-size: 0.78rem;
+  font-size: 0.88rem;
   font-weight: 600;
   color: var(--text-secondary);
 }
@@ -1396,13 +1402,13 @@ input[type="number"]:focus {
 }
 
 .build-card-title {
-  font-size: 0.82rem;
+  font-size: 0.92rem;
   font-weight: 700;
   color: #fff;
 }
 
 .build-card-summary {
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   color: var(--text-muted);
 }
 
@@ -1529,4 +1535,209 @@ input[type="number"]:focus {
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid currentColor;
 }
+
+/* Tier Dividers for Skill Trees */
+.tier-divider {
+  display: flex;
+  align-items: center;
+  margin: 1.25rem 0 0.5rem 0;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+  padding-bottom: 0.35rem;
+}
+
+.tier-divider-text {
+  background: transparent;
+  padding-right: 0.5rem;
+}
+
+.skill-node-card.tier-locked {
+  opacity: 0.3;
+  cursor: not-allowed;
+  border-color: rgba(255, 255, 255, 0.02);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.skill-node-card.tier-locked:hover {
+  transform: none;
+  box-shadow: none;
+  background: rgba(0, 0, 0, 0.2);
+  opacity: 1;
+}
+
+.skill-node-card.tier-locked:hover > :not(.skill-tooltip) {
+  opacity: 0.3;
+}
+
+.skill-node-card.tier-locked .skill-node-icon {
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--text-muted);
+}
+
+/* Tooltips */
+.skill-tooltip {
+  visibility: hidden;
+  opacity: 0;
+  position: absolute;
+  bottom: 120%;
+  width: 280px;
+  background: rgba(10, 15, 30, 0.96);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  padding: 0.75rem;
+  z-index: 1000;
+  pointer-events: none;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 15px rgba(102, 252, 241, 0.05);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  backdrop-filter: blur(12px);
+  text-align: left;
+}
+
+.skill-tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  border-width: 6px;
+  border-style: solid;
+  border-color: var(--panel-border) transparent transparent transparent;
+}
+
+/* Branch specific tooltip positioning to prevent screen overflow */
+.conditioning .skill-tooltip {
+  left: 0;
+  transform: translateY(5px);
+}
+.conditioning .skill-tooltip::after {
+  left: 20px;
+}
+.conditioning .skill-node-card:hover .skill-tooltip {
+  visibility: visible;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.mobility .skill-tooltip {
+  left: 50%;
+  transform: translateX(-50%) translateY(5px);
+}
+.mobility .skill-tooltip::after {
+  left: 50%;
+  transform: translateX(-50%);
+}
+.mobility .skill-node-card:hover .skill-tooltip {
+  visibility: visible;
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.survival .skill-tooltip {
+  right: 0;
+  left: auto;
+  transform: translateY(5px);
+}
+.survival .skill-tooltip::after {
+  right: 20px;
+}
+.survival .skill-node-card:hover .skill-tooltip {
+  visibility: visible;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Category Filters & Tier Select Styles */
+.filter-tab {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.filter-tab:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+.filter-tab.active {
+  background: var(--accent-color);
+  border-color: var(--accent-color);
+  color: var(--bg-color);
+  font-weight: 700;
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+.tier-select {
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(102, 252, 241, 0.3);
+  color: var(--text-primary);
+  border-radius: 4px;
+  padding: 0.1rem 0.3rem;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  cursor: pointer;
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+.tier-select:focus {
+  border-color: var(--accent-color);
+}
+.totals-summary strong {
+  color: var(--accent-color);
+  font-family: var(--font-mono);
+}
+.weight-bar-fill.overloaded {
+  background: #ef4444 !important;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+}
+
+/* Reddit Strategy Enhancements Styles */
+.track-star-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.15rem;
+  color: var(--text-muted);
+  transition: color var(--transition-fast), transform var(--transition-fast);
+}
+.track-star-btn:hover {
+  transform: scale(1.2);
+  color: var(--rarity-legendary);
+}
+.track-star-btn.tracked {
+  color: var(--rarity-legendary);
+  text-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
+}
+.rec-badge.tracked-border {
+  border: 1px solid var(--rarity-legendary) !important;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.2);
+}
+.yield-tag {
+  display: inline-block;
+  font-size: 0.62rem;
+  padding: 0.05rem 0.2rem;
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  margin-right: 0.25rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.yield-field {
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+.yield-hideout {
+  background: rgba(16, 185, 129, 0.1);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+
 

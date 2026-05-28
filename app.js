@@ -224,13 +224,32 @@ function initApp() {
     primarySelect.innerHTML = '<option value="0">-- None / Unequipped (0.00 kg) --</option>';
     secondarySelect.innerHTML = '<option value="0">-- None / Unequipped (0.00 kg) --</option>';
     
-    const weapons = itemsDb.filter(isWeaponItem)
-      .sort((a, b) => (a.name.en || a.id).localeCompare(b.name.en || b.id));
-      
+    // Group weapons by base name
+    const weaponFamilies = {};
+    const weapons = itemsDb.filter(isWeaponItem);
+    
     weapons.forEach(w => {
+      const name = w.name.en || w.id;
+      const baseName = name.replace(/\s+(IV|III|II|I|V|VI)$/i, '').trim();
+      
+      // If we haven't seen this family, or if this is the Tier I version, store it
+      if (!weaponFamilies[baseName] || name.endsWith(' I')) {
+        weaponFamilies[baseName] = w;
+      }
+    });
+
+    const uniqueWeapons = Object.values(weaponFamilies)
+      .sort((a, b) => {
+        const nameA = (a.name.en || a.id).replace(/\s+(IV|III|II|I|V|VI)$/i, '').trim();
+        const nameB = (b.name.en || b.id).replace(/\s+(IV|III|II|I|V|VI)$/i, '').trim();
+        return nameA.localeCompare(nameB);
+      });
+      
+    uniqueWeapons.forEach(w => {
+      const baseName = (w.name.en || w.id).replace(/\s+(IV|III|II|I|V|VI)$/i, '').trim();
       const opt1 = document.createElement('option');
       opt1.value = w.id;
-      opt1.textContent = `${w.name.en || w.id} (${(w.weightKg || 0).toFixed(2)} kg)`;
+      opt1.textContent = `${baseName} (${(w.weightKg || 0).toFixed(2)} kg)`;
       
       const opt2 = opt1.cloneNode(true);
       primarySelect.appendChild(opt1);
@@ -436,7 +455,7 @@ window.openDetailDrawer = function(itemId) {
 
     resolveBtn.onclick = () => {
       closeDetailDrawer();
-      switchTab('crafting-tab', document.querySelectorAll('.tab-btn')[1]);
+      switchTab('crafting-tab', document.querySelector(".tab-btn[onclick*='crafting-tab']"));
       
       const searchFilterInput = document.getElementById('crafting-search-filter');
       if (searchFilterInput) {
@@ -938,6 +957,36 @@ window.filterStrategyTable = function() {
 
 // Backpack Strategist State
 let backpackItems = [];
+let backpackCategory = 'all';
+let weaponRowTiers = {};
+let trackedItems = new Set();
+
+window.toggleTrackItem = function(itemId) {
+  if (trackedItems.has(itemId)) {
+    trackedItems.delete(itemId);
+  } else {
+    trackedItems.add(itemId);
+  }
+  filterBackpackTable();
+  updateBackpackSimulator();
+};
+
+window.setBackpackCategory = function(category) {
+  backpackCategory = category;
+  document.querySelectorAll('.filter-tab').forEach(btn => {
+    if (btn.getAttribute('data-category') === category) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+  filterBackpackTable();
+};
+
+window.changeWeaponRowTier = function(baseName, index) {
+  weaponRowTiers[baseName] = parseInt(index);
+  filterBackpackTable();
+};
 
 window.initBackpackStrategist = function() {
   filterBackpackTable();
@@ -949,10 +998,29 @@ window.filterBackpackTable = function() {
   const tableBody = document.getElementById('backpack-table-body');
   tableBody.innerHTML = '';
 
+  // 1. First pass filter by query and category
   const filtered = itemsDb.filter(item => {
     const name = (item.name.en || item.id).toLowerCase();
     const type = (item.type || "").toLowerCase();
-    return name.includes(query) || type.includes(query);
+    
+    const matchesSearch = name.includes(query) || type.includes(query);
+    if (!matchesSearch) return false;
+    
+    if (backpackCategory === 'all') return true;
+    
+    const isWeapon = isWeaponItem(item);
+    const isMaterial = ['Basic Material', 'Topside Material', 'Refined Material', 'Nature'].includes(item.type);
+    const isConsumable = ['Quick Use', 'Key', 'Blueprint'].includes(item.type);
+    const isJunk = ['Recyclable', 'Trinket'].includes(item.type);
+    const isGadget = ['Armor', 'Modification', 'Shield', 'Augment'].includes(item.type);
+    
+    if (backpackCategory === 'material') return isMaterial;
+    if (backpackCategory === 'consumable') return isConsumable;
+    if (backpackCategory === 'junk') return isJunk;
+    if (backpackCategory === 'weapon') return isWeapon;
+    if (backpackCategory === 'gadget') return isGadget;
+    
+    return true;
   });
 
   if (filtered.length === 0) {
@@ -962,19 +1030,80 @@ window.filterBackpackTable = function() {
     return;
   }
 
+  // 2. Group weapon tiers under family name
+  const displayItems = [];
+  const weaponGroups = {};
+
   filtered.forEach(item => {
+    if (isWeaponItem(item)) {
+      const nameEn = item.name.en || item.id;
+      const baseName = nameEn.replace(/\s+(IV|III|II|I|V|VI)$/i, '').trim();
+      
+      if (!weaponGroups[baseName]) {
+        weaponGroups[baseName] = [];
+      }
+      weaponGroups[baseName].push(item);
+    } else {
+      displayItems.push({
+        isGroup: false,
+        item: item
+      });
+    }
+  });
+
+  Object.keys(weaponGroups).forEach(baseName => {
+    const list = weaponGroups[baseName];
+    list.sort((a, b) => {
+      const aName = a.name.en || a.id;
+      const bName = b.name.en || b.id;
+      return aName.localeCompare(bName);
+    });
+
+    let activeIndex = weaponRowTiers[baseName] !== undefined ? weaponRowTiers[baseName] : 0;
+    if (query) {
+      list.forEach((tier, idx) => {
+        const tierName = (tier.name.en || tier.id).toLowerCase();
+        if (tierName === query || tierName.includes(query)) {
+          activeIndex = idx;
+        }
+      });
+    }
+    
+    weaponRowTiers[baseName] = activeIndex;
+
+    displayItems.push({
+      isGroup: true,
+      baseName: baseName,
+      tiers: list
+    });
+  });
+
+  // Sort displayItems alphabetically by name
+  displayItems.sort((a, b) => {
+    const nameA = a.isGroup ? a.baseName : (a.item.name.en || a.item.id);
+    const nameB = b.isGroup ? b.baseName : (b.item.name.en || b.item.id);
+    return nameA.localeCompare(nameB);
+  });
+
+  // 3. Render items
+  displayItems.forEach(dItem => {
+    const item = dItem.isGroup ? dItem.tiers[weaponRowTiers[dItem.baseName] || 0] : dItem.item;
+    if (!item) return;
+
     const row = document.createElement('tr');
     const density = item.weightKg > 0 ? (item.value / item.weightKg) : 0;
     
-    // Build density badge
     let densityClass = 'low';
     if (density >= 1000) densityClass = 'high';
     else if (density >= 250) densityClass = 'med';
 
-    // Build salvage yield string
-    let salvageStr = 'None';
+    // Build Field Salvage vs Hideout Recycle yields
+    let yieldCellContent = '<div style="font-size: 0.75rem; color: var(--text-muted);">None</div>';
+    let fieldYieldStr = '';
+    let hideoutYieldStr = '';
+
     if (item.salvagesInto && Object.keys(item.salvagesInto).length > 0) {
-      salvageStr = Object.entries(item.salvagesInto)
+      fieldYieldStr = Object.entries(item.salvagesInto)
         .map(([mId, qty]) => {
           const mItem = itemsDb.find(i => i.id === mId);
           return `${qty}x ${mItem ? mItem.name.en : mId}`;
@@ -982,26 +1111,77 @@ window.filterBackpackTable = function() {
         .join(', ');
     }
 
+    if (item.recyclesInto && Object.keys(item.recyclesInto).length > 0) {
+      hideoutYieldStr = Object.entries(item.recyclesInto)
+        .map(([mId, qty]) => {
+          const mItem = itemsDb.find(i => i.id === mId);
+          return `${qty}x ${mItem ? mItem.name.en : mId}`;
+        })
+        .join(', ');
+    }
+
+    if (fieldYieldStr || hideoutYieldStr) {
+      yieldCellContent = `
+        <div style="display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.75rem;">
+          ${fieldYieldStr ? `<div style="display: flex; align-items: center;"><span class="yield-tag yield-field">Field</span><span style="color: var(--text-secondary); max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${fieldYieldStr}">${fieldYieldStr}</span></div>` : ''}
+          ${hideoutYieldStr ? `<div style="display: flex; align-items: center;"><span class="yield-tag yield-hideout">Speranza</span><span style="color: var(--text-secondary); max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${hideoutYieldStr}">${hideoutYieldStr}</span></div>` : ''}
+        </div>
+      `;
+    }
+
     const rec = getInRoundRecommendation(item);
     const itemIcon = item.icon || item.imageFilename || '';
 
-    row.innerHTML = `
-      <td style="font-weight: 700; cursor: pointer; color: var(--rarity-${item.rarity.toLowerCase()});" onclick="openDetailDrawer('${item.id}')">
+    const isTracked = trackedItems.has(item.id);
+    const trackedBadge = isTracked ? `<span style="font-size:0.65rem; color:var(--rarity-legendary); margin-left:0.5rem; border:1px solid var(--rarity-legendary); padding:0.05rem 0.2rem; border-radius:3px; font-weight:700;">★ TRACKED</span>` : '';
+
+    let nameCellContent = '';
+    if (dItem.isGroup) {
+      const activeIdx = weaponRowTiers[dItem.baseName] || 0;
+      nameCellContent = `
+        <div style="display:flex; align-items:center; gap:0.5rem;">
+          ${itemIcon ? `<img class="material-icon" src="${itemIcon}" alt="" onerror="this.style.display='none';">` : ''}
+          <span style="cursor:pointer;" onclick="openDetailDrawer('${item.id}')">${dItem.baseName}</span>
+          <select class="tier-select" onchange="changeWeaponRowTier('${dItem.baseName}', this.value)">
+            ${dItem.tiers.map((t, idx) => {
+              const tierName = t.name.en.replace(dItem.baseName, '').trim() || t.id;
+              const selected = idx === activeIdx ? 'selected' : '';
+              return `<option value="${idx}" ${selected}>${tierName}</option>`;
+            }).join('')}
+          </select>
+          ${trackedBadge}
+        </div>
+      `;
+    } else {
+      nameCellContent = `
         <div style="display:flex; align-items:center;">
           ${itemIcon ? `<img class="material-icon" src="${itemIcon}" alt="" onerror="this.style.display='none';">` : ''}
-          <span>${item.name.en || item.id}</span>
+          <span onclick="openDetailDrawer('${item.id}')" style="cursor:pointer;">${item.name.en || item.id}</span>
+          ${item.stackSize > 1 ? `<span style="font-size:0.65rem; color:var(--text-muted); margin-left:0.5rem; border:1px solid rgba(255,255,255,0.1); padding:0.05rem 0.2rem; border-radius:3px;">Stack: ${item.stackSize}</span>` : ''}
+          ${trackedBadge}
         </div>
+      `;
+    }
+
+    row.innerHTML = `
+      <td style="text-align: center;">
+        <button class="track-star-btn ${isTracked ? 'tracked' : ''}" onclick="toggleTrackItem('${item.id}')">
+          ${isTracked ? '★' : '☆'}
+        </button>
+      </td>
+      <td style="font-weight: 700; color: var(--rarity-${item.rarity.toLowerCase()});">
+        ${nameCellContent}
       </td>
       <td style="font-family: var(--font-mono); font-size: 0.8rem;">${(item.weightKg || 0).toFixed(2)} kg</td>
       <td style="font-family: var(--font-mono); font-weight: 600;">${item.value || 0}c</td>
       <td>
         <span class="density-badge ${densityClass}">${Math.round(density)} c/kg</span>
       </td>
-      <td style="color: var(--text-secondary); font-size: 0.8rem;" title="${salvageStr}">
-        ${salvageStr}
+      <td>
+        ${yieldCellContent}
       </td>
       <td>
-        <span class="rec-badge ${rec.badgeClass}" title="${rec.reason}">${rec.action}</span>
+        <span class="rec-badge ${rec.badgeClass} ${isTracked ? 'tracked-border' : ''}" title="${rec.reason}">${rec.action}</span>
       </td>
       <td>
         <button class="btn-sm btn-add" onclick="addToBackpack('${item.id}')">
@@ -1014,6 +1194,13 @@ window.filterBackpackTable = function() {
 };
 
 function getInRoundRecommendation(item) {
+  if (typeof trackedItems !== 'undefined' && trackedItems.has(item.id)) {
+    return {
+      action: 'TRACKED - KEEP',
+      badgeClass: 'rec-keep',
+      reason: 'User-tracked project resource. Do NOT drop or salvage.'
+    };
+  }
   const isWeapon = isWeaponItem(item) || ['Armor', 'Modification'].includes(item.type);
   if (isWeapon) {
     return {
@@ -1128,7 +1315,9 @@ window.removeFromBackpack = function(itemId) {
 };
 
 window.updateBackpackSimulator = function() {
-  const augmentWeight = parseFloat(document.getElementById('equipped-augment').value) || 70.0;
+  const augmentSelect = document.getElementById('equipped-augment');
+  const augmentWeight = parseFloat(augmentSelect.value) || 70.0;
+  const slotLimit = parseInt(augmentSelect.options[augmentSelect.selectedIndex]?.getAttribute('data-slots')) || 18;
   const skillBonus = parseFloat(document.getElementById('skill-broad-shoulders').value) || 0.0;
   const limit = augmentWeight + skillBonus;
   const listContainer = document.getElementById('pack-items-list');
@@ -1152,6 +1341,7 @@ window.updateBackpackSimulator = function() {
 
   let totalWeight = effectiveWeaponWeight;
   let totalValue = 0;
+  let totalSlots = 0;
 
   if (backpackItems.length === 0) {
     listContainer.innerHTML = `<div style="color:var(--text-muted); text-align:center; padding: 1.5rem; font-size:0.75rem;">Your backpack has no loot. Add items from the directory to simulate.</div>`;
@@ -1174,6 +1364,14 @@ window.updateBackpackSimulator = function() {
     } else {
       bar.classList.remove('overloaded');
     }
+
+    document.getElementById('pack-slots-text').textContent = `0 / ${slotLimit} slots`;
+    const slotsBar = document.getElementById('pack-slots-bar');
+    if (slotsBar) {
+      slotsBar.style.width = '0%';
+      slotsBar.classList.remove('overloaded');
+    }
+
     document.getElementById('pack-total-value').textContent = '0 c';
     document.getElementById('pack-avg-density').textContent = '0 c/kg';
 
@@ -1224,20 +1422,28 @@ window.updateBackpackSimulator = function() {
     totalWeight += itemWeight;
     totalValue += itemValue;
 
+    const stackSize = item.stackSize || 1;
+    const itemSlots = Math.ceil(packItem.qty / stackSize);
+    totalSlots += itemSlots;
+
     const density = item.weightKg > 0 ? (item.value / item.weightKg) : 0;
+    const slotsStr = stackSize > 1 ? ` | Slots: ${itemSlots} (limit ${stackSize})` : '';
 
     const row = document.createElement('div');
     row.className = 'material-item';
     row.style.padding = '0.35rem 0';
     row.style.borderBottom = '1px solid rgba(255,255,255,0.02)';
 
+    const isTracked = typeof trackedItems !== 'undefined' && trackedItems.has(item.id);
+    const starStr = isTracked ? ' <span style="color:var(--rarity-legendary);">★</span>' : '';
+
     row.innerHTML = `
       <div style="display:flex; flex-direction:column; gap:0.15rem; max-width:200px;">
         <span style="font-weight:600; font-size:0.8rem; color: var(--rarity-${item.rarity.toLowerCase()}); cursor:pointer;" onclick="openDetailDrawer('${item.id}')">
-          ${item.name.en} ${packItem.qty > 1 ? `(x${packItem.qty})` : ''}
+          ${item.name.en} ${packItem.qty > 1 ? `(x${packItem.qty})` : ''}${starStr}
         </span>
         <span style="font-size:0.65rem; color:var(--text-muted);">
-          Wt: ${itemWeight.toFixed(2)}kg | Val: ${itemValue}c
+          Wt: ${itemWeight.toFixed(2)}kg | Val: ${itemValue}c${slotsStr}
         </span>
       </div>
       <div style="display:flex; align-items:center; gap:0.5rem;">
@@ -1254,9 +1460,8 @@ window.updateBackpackSimulator = function() {
 
   const avgDensity = totalWeight > 0 ? (totalValue / totalWeight) : 0;
 
-  // Update simulator UI
+  // Update simulator UI Weight
   document.getElementById('pack-weight-text').textContent = `${totalWeight.toFixed(2)} / ${limit.toFixed(2)} kg`;
-  
   const fillPercent = Math.min(100, (totalWeight / limit) * 100);
   const bar = document.getElementById('pack-weight-bar');
   bar.style.width = `${fillPercent}%`;
@@ -1265,6 +1470,19 @@ window.updateBackpackSimulator = function() {
     bar.classList.add('overloaded');
   } else {
     bar.classList.remove('overloaded');
+  }
+
+  // Update simulator UI Slots
+  document.getElementById('pack-slots-text').textContent = `${totalSlots} / ${slotLimit} slots`;
+  const slotsPercent = Math.min(100, (totalSlots / slotLimit) * 100);
+  const slotsBar = document.getElementById('pack-slots-bar');
+  if (slotsBar) {
+    slotsBar.style.width = `${slotsPercent}%`;
+    if (totalSlots > slotLimit) {
+      slotsBar.classList.add('overloaded');
+    } else {
+      slotsBar.classList.remove('overloaded');
+    }
   }
 
   document.getElementById('pack-total-value').textContent = `${totalValue} c`;
@@ -1276,33 +1494,55 @@ window.updateBackpackSimulator = function() {
   let adviceClass = 'advice-card';
   let titleClass = 'advice-title';
 
-  if (totalWeight > limit) {
-    // Overloaded! Find the lowest density item in the backpack
-    let lowestDensityItem = null;
-    let lowestDensityVal = Infinity;
+  const isWeightOver = totalWeight > limit;
+  const isSlotsOver = totalSlots > slotLimit;
 
+  if (isWeightOver || isSlotsOver) {
+    adviceClass = 'advice-card warning';
+    titleClass = 'advice-title warning';
+    
+    if (isWeightOver && isSlotsOver) {
+      adviceTitle = '<i class="fa-solid fa-triangle-exclamation"></i> Weight & Slots Exceeded!';
+    } else if (isWeightOver) {
+      adviceTitle = '<i class="fa-solid fa-triangle-exclamation"></i> Weight Limit Exceeded!';
+    } else {
+      adviceTitle = '<i class="fa-solid fa-triangle-exclamation"></i> Backpack Slots Full!';
+    }
+
+    // Find non-critical items and sort by value density (ascending)
+    const dropCandidates = [];
     backpackItems.forEach(packItem => {
       const item = itemsDb.find(i => i.id === packItem.id);
       if (!item) return;
       
-      const isCritical = ['Key', 'Blueprint'].includes(item.type);
-      if (isCritical) return; // Never recommend dropping keys/blueprints
+      const isCritical = ['Key', 'Blueprint'].includes(item.type) || (typeof trackedItems !== 'undefined' && trackedItems.has(item.id));
+      if (isCritical) return;
 
       const density = item.weightKg > 0 ? (item.value / item.weightKg) : 0;
-      if (density < lowestDensityVal) {
-        lowestDensityVal = density;
-        lowestDensityItem = item;
-      }
+      dropCandidates.push({
+        item: item,
+        density: density,
+        qty: packItem.qty
+      });
     });
 
-    adviceClass = 'advice-card warning';
-    titleClass = 'advice-title warning';
-    adviceTitle = '<i class="fa-solid fa-triangle-exclamation"></i> Backpack Overloaded!';
-    
-    if (lowestDensityItem) {
-      adviceText = `Your backpack weight (${totalWeight.toFixed(2)} kg) exceeds the limit. To free up capacity, we recommend dropping <strong>${lowestDensityItem.name.en}</strong> first. It has the lowest value density in your pack (<strong>${Math.round(lowestDensityVal)} c/kg</strong>) and yields poor returns.`;
+    dropCandidates.sort((a, b) => a.density - b.density);
+
+    if (dropCandidates.length > 0) {
+      const first = dropCandidates[0];
+      const second = dropCandidates[1];
+      let dropSuggestion = `<strong>${first.item.name.en}</strong> (density: <strong>${Math.round(first.density)} c/kg</strong>)`;
+      if (second) {
+        dropSuggestion += ` or <strong>${second.item.name.en}</strong> (density: <strong>${Math.round(second.density)} c/kg</strong>)`;
+      }
+      
+      if (isSlotsOver && !isWeightOver) {
+        adviceText = `Your slots limit is exceeded (${totalSlots} / ${slotLimit}). We recommend dropping ${dropSuggestion} to free up slot capacity.`;
+      } else {
+        adviceText = `Your weight capacity is exceeded (${totalWeight.toFixed(2)} kg). We recommend dropping or salvaging ${dropSuggestion} first to compress weight.`;
+      }
     } else {
-      adviceText = `Your backpack weight (${totalWeight.toFixed(2)} kg) exceeds the limit. Drop your heaviest non-critical equipment to enable extraction.`;
+      adviceText = `Backpack limit exceeded. Drop or salvage your heaviest non-critical equipment to enable extraction.`;
     }
   } else {
     // Check if we have salvageable items in the pack that offer compression
@@ -1326,7 +1566,6 @@ window.updateBackpackSimulator = function() {
 
       if (salvageValue > 0) {
         const weightSaved = item.weightKg - salvageWeight;
-        // If weight reduction is high and value loss is low or negative
         const valueDifference = item.value - salvageValue;
         if (weightSaved >= 0.5 && valueDifference <= 300 && weightSaved > bestWeightSaved) {
           bestWeightSaved = weightSaved;
@@ -1377,31 +1616,64 @@ window.updateBackpackSimulator = function() {
 // Skill Planner Database & State
 const SKILLS_DB = {
   conditioning: [
+    // Tier 1 (0 points required)
     { id: 'used_to_weight', name: 'Used to the Weight', tier: 1, icon: 'fa-shield-halved', maxPoints: 5, desc: 'Reduces movement speed penalty by 30% when wearing a shield.' },
     { id: 'blast_born', name: 'Blast-Born', tier: 1, icon: 'fa-burst', maxPoints: 5, desc: 'Reduces the duration of hearing impairment and shake caused by nearby explosions by 50%.' },
+    { id: 'a_little_extra', name: 'A Little Extra', tier: 1, icon: 'fa-cubes', maxPoints: 5, desc: 'Breaching doors and containers generates additional random crafting materials.' },
+    { id: 'effortless_swing', name: 'Effortless Swing', tier: 1, icon: 'fa-hand-fist', maxPoints: 5, desc: 'Reduces the stamina cost of all melee attacks by 25%.' },
+    { id: 'sky_clearing_swing', name: 'Sky-Clearing Swing', tier: 1, icon: 'fa-circle-arrow-up', maxPoints: 5, desc: 'Increases melee damage against airborne drones by 50%.' },
+    // Tier 2 (15 points required)
     { id: 'proficient_pryer', name: 'Proficient Pryer', tier: 2, icon: 'fa-key', maxPoints: 5, desc: 'Reduces container and door prying time by 25%.' },
     { id: 'gentle_pressure', name: 'Gentle Pressure', tier: 2, icon: 'fa-volume-xmark', maxPoints: 5, desc: 'Reduces noise made when breaching doors or containers by 40%.' },
+    { id: 'loaded_arms', name: 'Loaded Arms', tier: 2, icon: 'fa-gun', maxPoints: 1, desc: 'Reduces the weight contribution of equipped weapons to your encumbrance by 50%.' },
+    { id: 'turtle_crawl', name: 'Turtle Crawl', tier: 2, icon: 'fa-turtle', maxPoints: 5, desc: 'Reduces damage taken by 40% while in a downed (crawling) state.' },
+    { id: 'unburdened_roll', name: 'Unburdened Roll', tier: 2, icon: 'fa-person-running', maxPoints: 1, desc: 'Allows your first dodge roll after a shield breaks to cost no stamina.' },
+    // Tier 3 (36 points required)
     { id: 'fight_or_flight', name: 'Fight or Flight', tier: 3, icon: 'fa-heart-pulse', maxPoints: 5, desc: 'Regain 15 stamina instantly when taking damage in combat (15s cooldown).' },
     { id: 'survivor_stamina', name: 'Survivor\'s Stamina', tier: 3, icon: 'fa-bolt', maxPoints: 1, desc: 'Stamina regenerates 30% faster when your health drops below 25%.' },
-    { id: 'downed_determined', name: 'Downed But Determined', tier: 3, icon: 'fa-hand-holding-heart', maxPoints: 5, desc: 'Increases bleed-out time when downed by 30%, giving allies more time to revive you.' }
+    { id: 'downed_determined', name: 'Downed But Determined', tier: 3, icon: 'fa-hand-holding-heart', maxPoints: 5, desc: 'Increases bleed-out time when downed by 30%, giving allies more time to revive you.' },
+    { id: 'back_on_your_feet', name: 'Back on Your Feet', tier: 3, icon: 'fa-kit-medical', maxPoints: 1, desc: 'Automatically regenerates health slowly up to a limit when critically wounded.' },
+    { id: 'flyswatter', name: 'Flyswatter', tier: 3, icon: 'fa-bug-slash', maxPoints: 1, desc: 'Allows you to destroy small ARC units like Wasps and Turrets with a single melee strike.' }
   ],
   mobility: [
+    // Tier 1 (0 points required)
     { id: 'marathon_runner', name: 'Marathon Runner', tier: 1, icon: 'fa-gauge-high', maxPoints: 5, desc: 'Sprinting consumes 20% less stamina.' },
     { id: 'youthful_lungs', name: 'Youthful Lungs', tier: 1, icon: 'fa-lungs', maxPoints: 5, desc: 'Increases maximum stamina pool by 25 points.' },
-    { id: 'nimble_climber', name: 'Nimble Climber', tier: 2, icon: 'fa-person-climbing', maxPoints: 5, desc: 'Increases vaulting, climbing, and ladder traversal speeds by 30%.' },
-    { id: 'sturdy_ankles', name: 'Sturdy Ankles', tier: 2, icon: 'fa-shoe-prints', maxPoints: 5, desc: 'Reduces falling damage by 50% from non-lethal heights.' },
+    { id: 'nimble_climber', name: 'Nimble Climber', tier: 1, icon: 'fa-person-climbing', maxPoints: 5, desc: 'Increases climbing, vaulting, and ladder traversal speeds by 30%.' },
+    { id: 'effortless_roll', name: 'Effortless Roll', tier: 1, icon: 'fa-rotate', maxPoints: 5, desc: 'Reduces the stamina cost of dodge rolls by 25%.' },
+    { id: 'sturdy_ankles', name: 'Sturdy Ankles', tier: 1, icon: 'fa-shoe-prints', maxPoints: 5, desc: 'Reduces falling damage by 50% from non-lethal heights.' },
+    // Tier 2 (15 points required)
     { id: 'slip_slide', name: 'Slip and Slide', tier: 2, icon: 'fa-person-skating', maxPoints: 5, desc: 'Increases slide distance by 25% and slide speed by 15%.' },
+    { id: 'heroic_leap', name: 'Heroic Leap', tier: 2, icon: 'fa-arrows-up-to-line', maxPoints: 5, desc: 'Increases the distance of sprint dodge rolls by 30%.' },
+    { id: 'crawl_before_walk', name: 'Crawl Before You Walk', tier: 2, icon: 'fa-baby', maxPoints: 5, desc: 'Increases movement speed while in a downed crawling state by 40%.' },
+    { id: 'vigorous_vaulter', name: 'Vigorous Vaulter', tier: 2, icon: 'fa-person-running', maxPoints: 1, desc: 'Eliminates the vault speed reduction when you are completely out of stamina.' },
+    { id: 'ready_to_roll', name: 'Ready to Roll', tier: 2, icon: 'fa-arrows-spin', maxPoints: 5, desc: 'Increases the timing window for a recovery roll after falling to avoid damage.' },
+    // Tier 3 (36 points required)
     { id: 'carry_momentum', name: 'Carry the Momentum', tier: 3, icon: 'fa-forward', maxPoints: 1, desc: 'Executing a sprint dodge roll negates sprint stamina cost for 2 seconds.' },
-    { id: 'calming_stroll', name: 'Calming Stroll', tier: 3, icon: 'fa-person-walking', maxPoints: 1, desc: 'Allows stamina to regenerate at 100% speed while walking (normally requires standing still).' }
+    { id: 'calming_stroll', name: 'Calming Stroll', tier: 3, icon: 'fa-person-walking', maxPoints: 1, desc: 'Allows stamina to regenerate at 100% speed while walking.' },
+    { id: 'vaults_on_vaults', name: 'Vaults on Vaults on Vaults', tier: 3, icon: 'fa-arrow-up-right-from-square', maxPoints: 1, desc: 'Vaulting over obstacles no longer consumes any stamina.' },
+    { id: 'vault_spring', name: 'Vault Spring', tier: 3, icon: 'fa-arrow-up-from-bracket', maxPoints: 1, desc: 'Allows executing a high jump immediately after a vault animation.' },
+    { id: 'off_the_wall', name: 'Off the Wall', tier: 3, icon: 'fa-border-all', maxPoints: 5, desc: 'Increases wall-bound leap distance by 40%.' }
   ],
   survival: [
-    { id: 'agile_croucher', name: 'Agile Croucher', tier: 1, icon: 'fa-person-running', maxPoints: 5, desc: 'Increases crouching movement speed by 25%.' },
+    // Tier 1 (0 points required)
+    { id: 'agile_croucher', name: 'Agile Croucher', tier: 1, icon: 'fa-child', maxPoints: 5, desc: 'Increases crouching movement speed by 25%.' },
     { id: 'silent_scavenger', name: 'Silent Scavenger', tier: 1, icon: 'fa-volume-mute', maxPoints: 5, desc: 'Reduces the radius of noise generated when searching containers by 50%.' },
+    { id: 'revitalizing_squat', name: 'Revitalizing Squat', tier: 1, icon: 'fa-arrows-down-to-line', maxPoints: 5, desc: 'Increases stamina regeneration rate by 20% while crouched.' },
+    { id: 'good_as_new', name: 'Good as New', tier: 1, icon: 'fa-heart-circle-check', maxPoints: 5, desc: 'Increases stamina regeneration rate by 30% while under healing effects.' },
+    { id: 'suffer_in_silence', name: 'Suffer in Silence', tier: 1, icon: 'fa-volume-off', maxPoints: 5, desc: 'Reduces noise generated by your movement when critically injured by 50%.' },
+    // Tier 2 (15 points required)
     { id: 'in_round_crafting', name: 'In-Round Crafting', tier: 2, icon: 'fa-screwdriver-wrench', maxPoints: 1, desc: 'Unlocks the ability to craft basic medical supplies and ammo stacks topside during raids.' },
     { id: 'looters_luck', name: 'Looter\'s Luck', tier: 2, icon: 'fa-clover', maxPoints: 5, desc: 'Increases the chance of finding rare components in industrial chests by 15%.' },
-    { id: 'broad_shoulders', name: 'Broad Shoulders', tier: 3, icon: 'fa-weight-hanging', maxPoints: 5, desc: 'Increases maximum carry weight limit by 15.0 kg.' },
+    { id: 'three_deep_breaths', name: 'Three Deep Breaths', tier: 2, icon: 'fa-wind', maxPoints: 5, desc: 'Reduces the stamina recovery delay by 30% after an ability completely drains it.' },
+    { id: 'minesweeper', name: 'Minesweeper', tier: 2, icon: 'fa-triangle-exclamation', maxPoints: 1, desc: 'Allows defusing of enemy mines and explosive traps while slow crouch-walking.' },
+    { id: 'one_raiders_scraps', name: 'One Raider\'s Scraps', tier: 2, icon: 'fa-recycle', maxPoints: 5, desc: 'Adds a 15% chance to find additional field-crafted utility items inside containers.' },
+    // Tier 3 (36 points required)
+    { id: 'broad_shoulders', name: 'Broad Shoulders', tier: 3, icon: 'fa-weight-hanging', maxPoints: 3, desc: 'Increases maximum carry weight limit by up to 15.0 kg (+5.0 kg per point).' },
     { id: 'traveling_tinkerer', name: 'Traveling Tinkerer', tier: 3, icon: 'fa-hammer', maxPoints: 1, desc: 'Allows field crafting of high-tier gadgets (e.g. traps, shield rechargers) during raids.' },
-    { id: 'looters_instincts', name: 'Looter\'s Instincts', tier: 3, icon: 'fa-eye', maxPoints: 5, desc: 'Container icons are highlighted through walls within a 15-meter range.' }
+    { id: 'looters_instincts', name: 'Looter\'s Instincts', tier: 3, icon: 'fa-eye', maxPoints: 5, desc: 'Container icons are highlighted through walls within a 15-meter range.' },
+    { id: 'stubborn_mule', name: 'Stubborn Mule', tier: 3, icon: 'fa-truck-ramp-box', maxPoints: 5, desc: 'Reduces the movement speed penalty and stamina drain when over-encumbered by 40%.' },
+    { id: 'security_breach', name: 'Security Breach', tier: 3, icon: 'fa-lock-open', maxPoints: 1, desc: 'Enables prying open high-value security lockers topside during raids.' }
   ]
 };
 
@@ -1410,46 +1682,206 @@ const SKILL_BUILDS = [
     name: 'Pure Scavenger',
     summary: 'Survival-heavy solo loot collector',
     desc: 'Designed for maximizing scrap extraction. Focuses on carrying massive weight, looting silently, crouching stealthily, and evading combat patrols.',
-    points: { conditioning: 5, mobility: 15, survival: 35 },
+    points: { conditioning: 10, mobility: 20, survival: 46 },
     augment: 'Looting Mk. 3 (Survivor)',
     weapons: 'Renegade IV (Battle Rifle), Burletta II (Silenced Pistol)',
-    unlocked: ['agile_croucher', 'silent_scavenger', 'looters_luck', 'broad_shoulders', 'looters_instincts', 'marathon_runner', 'youthful_lungs', 'nimble_climber', 'blast_born']
+    unlocked: [],
+    defaultAllocations: {
+      silent_scavenger: 5, agile_croucher: 5, suffer_in_silence: 5, in_round_crafting: 1, looters_luck: 5,
+      marathon_runner: 5, youthful_lungs: 5, nimble_climber: 5, slip_slide: 5, good_as_new: 5,
+      three_deep_breaths: 5, one_raiders_scraps: 5, broad_shoulders: 3, looters_instincts: 5, security_breach: 1,
+      blast_born: 5, used_to_weight: 5, minesweeper: 1
+    },
+    priorityList: [
+      { id: 'silent_scavenger', target: 1 },
+      { id: 'agile_croucher', target: 1 },
+      { id: 'marathon_runner', target: 1 },
+      { id: 'youthful_lungs', target: 1 },
+      { id: 'silent_scavenger', target: 5 },
+      { id: 'agile_croucher', target: 5 },
+      { id: 'suffer_in_silence', target: 5 },
+      { id: 'in_round_crafting', target: 1 },
+      { id: 'looters_luck', target: 5 },
+      { id: 'marathon_runner', target: 5 },
+      { id: 'youthful_lungs', target: 5 },
+      { id: 'nimble_climber', target: 5 },
+      { id: 'slip_slide', target: 5 },
+      { id: 'good_as_new', target: 5 },
+      { id: 'three_deep_breaths', target: 5 },
+      { id: 'one_raiders_scraps', target: 5 },
+      { id: 'minesweeper', target: 1 },
+      { id: 'broad_shoulders', target: 3 },
+      { id: 'looters_instincts', target: 5 },
+      { id: 'security_breach', target: 1 },
+      { id: 'blast_born', target: 5 },
+      { id: 'used_to_weight', target: 5 }
+    ],
+    branchPriority: ['survival', 'mobility', 'conditioning']
   },
   {
     name: 'Combat Vanguard',
     summary: 'Shield-tanking front-line brawler',
     desc: 'Optimized for heavy combat, door-breaching, and team defense. Negates speed penalties when carrying shields, resists blasts, and recovers stamina under fire.',
-    points: { conditioning: 35, mobility: 15, survival: 5 },
+    points: { conditioning: 49, mobility: 22, survival: 5 },
     augment: 'Tactical Mk. 3 (Defensive)',
     weapons: 'Torrente IV (LMG), Vulcano IV (Shotgun)',
-    unlocked: ['used_to_weight', 'blast_born', 'proficient_pryer', 'fight_or_flight', 'survivor_stamina', 'downed_determined', 'youthful_lungs', 'slip_slide', 'carry_momentum', 'agile_croucher']
+    unlocked: [],
+    defaultAllocations: {
+      used_to_weight: 5, blast_born: 5, effortless_swing: 5, unburdened_roll: 1, loaded_arms: 1,
+      gentle_pressure: 4, turtle_crawl: 5, marathon_runner: 5, youthful_lungs: 5, nimble_climber: 5,
+      slip_slide: 5, heroic_leap: 2, sky_clearing_swing: 5, proficient_pryer: 5, fight_or_flight: 5,
+      downed_determined: 5, survivor_stamina: 1, back_on_your_feet: 1, flyswatter: 1, agile_croucher: 5
+    },
+    priorityList: [
+      { id: 'used_to_weight', target: 1 },
+      { id: 'blast_born', target: 1 },
+      { id: 'marathon_runner', target: 1 },
+      { id: 'youthful_lungs', target: 1 },
+      { id: 'used_to_weight', target: 5 },
+      { id: 'blast_born', target: 5 },
+      { id: 'effortless_swing', target: 5 },
+      { id: 'unburdened_roll', target: 1 },
+      { id: 'loaded_arms', target: 1 },
+      { id: 'gentle_pressure', target: 4 },
+      { id: 'turtle_crawl', target: 5 },
+      { id: 'marathon_runner', target: 5 },
+      { id: 'youthful_lungs', target: 5 },
+      { id: 'nimble_climber', target: 5 },
+      { id: 'slip_slide', target: 5 },
+      { id: 'heroic_leap', target: 2 },
+      { id: 'sky_clearing_swing', target: 5 },
+      { id: 'proficient_pryer', target: 5 },
+      { id: 'fight_or_flight', target: 5 },
+      { id: 'downed_determined', target: 5 },
+      { id: 'survivor_stamina', target: 1 },
+      { id: 'back_on_your_feet', target: 1 },
+      { id: 'flyswatter', target: 1 },
+      { id: 'agile_croucher', target: 5 }
+    ],
+    branchPriority: ['conditioning', 'mobility', 'survival']
   },
   {
     name: 'High-Mobility Scout',
     summary: 'Traversal speed runner & pathfinder',
     desc: 'Unmatched speed and vertical parkour agility. Slides, vaults, and climbs through ruins to locate drop zones and extraction points before patrol bots spot you.',
-    points: { conditioning: 5, mobility: 35, survival: 15 },
+    points: { conditioning: 10, mobility: 45, survival: 21 },
     augment: 'Looting Mk. 3 (Cautious)',
     weapons: 'Stitcher IV (SMG), Burletta IV (Pistol)',
-    unlocked: ['marathon_runner', 'youthful_lungs', 'nimble_climber', 'sturdy_ankles', 'slip_slide', 'carry_momentum', 'calming_stroll', 'agile_croucher', 'in_round_crafting', 'blast_born']
+    unlocked: [],
+    defaultAllocations: {
+      marathon_runner: 5, youthful_lungs: 5, nimble_climber: 5, vigorous_vaulter: 1, slip_slide: 5,
+      heroic_leap: 5, agile_croucher: 5, silent_scavenger: 5, good_as_new: 5, in_round_crafting: 1,
+      looters_luck: 5, effortless_roll: 5, ready_to_roll: 5, carry_momentum: 1, sturdy_ankles: 1,
+      vaults_on_vaults: 1, vault_spring: 1, off_the_wall: 5, blast_born: 5, used_to_weight: 5
+    },
+    priorityList: [
+      { id: 'marathon_runner', target: 1 },
+      { id: 'youthful_lungs', target: 1 },
+      { id: 'agile_croucher', target: 1 },
+      { id: 'silent_scavenger', target: 1 },
+      { id: 'marathon_runner', target: 5 },
+      { id: 'youthful_lungs', target: 5 },
+      { id: 'nimble_climber', target: 5 },
+      { id: 'vigorous_vaulter', target: 1 },
+      { id: 'slip_slide', target: 5 },
+      { id: 'heroic_leap', target: 5 },
+      { id: 'agile_croucher', target: 5 },
+      { id: 'silent_scavenger', target: 5 },
+      { id: 'good_as_new', target: 5 },
+      { id: 'in_round_crafting', target: 1 },
+      { id: 'looters_luck', target: 5 },
+      { id: 'effortless_roll', target: 5 },
+      { id: 'ready_to_roll', target: 5 },
+      { id: 'carry_momentum', target: 1 },
+      { id: 'sturdy_ankles', target: 1 },
+      { id: 'vaults_on_vaults', target: 1 },
+      { id: 'vault_spring', target: 1 },
+      { id: 'off_the_wall', target: 5 },
+      { id: 'blast_born', target: 5 },
+      { id: 'used_to_weight', target: 5 }
+    ],
+    branchPriority: ['mobility', 'survival', 'conditioning']
   },
   {
     name: 'Stealth Infiltrator',
     summary: 'Quiet lockbreaker & vault burglar',
     desc: 'Sneaks past ARC defenses, opens secure doors/vaults silently, and escapes with rare blueprints. Ideal for high-risk, low-detection looting raids.',
-    points: { conditioning: 15, mobility: 10, survival: 30 },
+    points: { conditioning: 21, mobility: 10, survival: 45 },
     augment: 'Looting Mk. 3 (Safekeeper)',
     weapons: 'Osprey IV (Sniper), Burletta II (Silenced)',
-    unlocked: ['agile_croucher', 'silent_scavenger', 'looters_luck', 'broad_shoulders', 'looters_instincts', 'blast_born', 'proficient_pryer', 'gentle_pressure', 'marathon_runner', 'slip_slide']
+    unlocked: [],
+    defaultAllocations: {
+      silent_scavenger: 5, agile_croucher: 5, suffer_in_silence: 5, in_round_crafting: 1, looters_luck: 5,
+      three_deep_breaths: 5, blast_born: 5, used_to_weight: 5, effortless_swing: 5, gentle_pressure: 5,
+      marathon_runner: 5, youthful_lungs: 5, good_as_new: 5, one_raiders_scraps: 5, broad_shoulders: 3,
+      looters_instincts: 5, minesweeper: 1, proficient_pryer: 1
+    },
+    priorityList: [
+      { id: 'silent_scavenger', target: 1 },
+      { id: 'agile_croucher', target: 1 },
+      { id: 'marathon_runner', target: 1 },
+      { id: 'youthful_lungs', target: 1 },
+      { id: 'silent_scavenger', target: 5 },
+      { id: 'agile_croucher', target: 5 },
+      { id: 'suffer_in_silence', target: 5 },
+      { id: 'in_round_crafting', target: 1 },
+      { id: 'looters_luck', target: 5 },
+      { id: 'three_deep_breaths', target: 5 },
+      { id: 'blast_born', target: 5 },
+      { id: 'used_to_weight', target: 5 },
+      { id: 'effortless_swing', target: 5 },
+      { id: 'gentle_pressure', target: 5 },
+      { id: 'marathon_runner', target: 5 },
+      { id: 'youthful_lungs', target: 5 },
+      { id: 'good_as_new', target: 5 },
+      { id: 'one_raiders_scraps', target: 5 },
+      { id: 'minesweeper', target: 1 },
+      { id: 'broad_shoulders', target: 3 },
+      { id: 'looters_instincts', target: 5 },
+      { id: 'proficient_pryer', target: 1 }
+    ],
+    branchPriority: ['survival', 'conditioning', 'mobility']
   },
   {
     name: 'Outpost Tinkerer',
     summary: 'Survival craftsman & gadget support',
     desc: 'Controls zones and supports squad survival by field-crafting traps, decoys, and healing sprays topside. Highly self-sufficient in late raids.',
-    points: { conditioning: 20, mobility: 5, survival: 30 },
+    points: { conditioning: 19, mobility: 15, survival: 42 },
     augment: 'Tactical Mk. 3 (Healing)',
     weapons: 'Rattler IV (Assault Rifle), Wasp Driver (Special)',
-    unlocked: ['agile_croucher', 'silent_scavenger', 'in_round_crafting', 'traveling_tinkerer', 'broad_shoulders', 'blast_born', 'proficient_pryer', 'gentle_pressure', 'survivor_stamina', 'marathon_runner']
+    unlocked: [],
+    defaultAllocations: {
+      agile_croucher: 5, silent_scavenger: 5, good_as_new: 5, in_round_crafting: 1, three_deep_breaths: 5,
+      blast_born: 5, used_to_weight: 5, a_little_extra: 5, proficient_pryer: 4, marathon_runner: 5,
+      youthful_lungs: 5, nimble_climber: 5, one_raiders_scraps: 5, suffer_in_silence: 5, looters_luck: 5,
+      traveling_tinkerer: 1, broad_shoulders: 3, minesweeper: 1, security_breach: 1
+    },
+    priorityList: [
+      { id: 'agile_croucher', target: 1 },
+      { id: 'silent_scavenger', target: 1 },
+      { id: 'marathon_runner', target: 1 },
+      { id: 'youthful_lungs', target: 1 },
+      { id: 'agile_croucher', target: 5 },
+      { id: 'silent_scavenger', target: 5 },
+      { id: 'good_as_new', target: 5 },
+      { id: 'in_round_crafting', target: 1 },
+      { id: 'three_deep_breaths', target: 5 },
+      { id: 'blast_born', target: 5 },
+      { id: 'used_to_weight', target: 5 },
+      { id: 'a_little_extra', target: 5 },
+      { id: 'proficient_pryer', target: 4 },
+      { id: 'marathon_runner', target: 5 },
+      { id: 'youthful_lungs', target: 5 },
+      { id: 'nimble_climber', target: 5 },
+      { id: 'one_raiders_scraps', target: 5 },
+      { id: 'suffer_in_silence', target: 5 },
+      { id: 'looters_luck', target: 5 },
+      { id: 'minesweeper', target: 1 },
+      { id: 'traveling_tinkerer', target: 1 },
+      { id: 'broad_shoulders', target: 3 },
+      { id: 'security_breach', target: 1 }
+    ],
+    branchPriority: ['survival', 'conditioning', 'mobility']
   },
   {
     name: 'Custom Build',
@@ -1463,6 +1895,7 @@ const SKILL_BUILDS = [
 ];
 
 let activeBuildIndex = 0;
+let customBaselineAllocations = {};
 
 window.initSkillPlanner = function() {
   const listContainer = document.getElementById('build-list-container');
@@ -1499,6 +1932,32 @@ window.selectBuild = function(buildIndex) {
   
   const build = SKILL_BUILDS[buildIndex];
   
+  // Expedition limit logic (Level + Bonus points)
+  const levelInput = document.getElementById('character-level-input');
+  const bonusInput = document.getElementById('expedition-bonus-input');
+  const charLevel = levelInput ? parseInt(levelInput.value) || 1 : 75;
+  const bonusPoints = bonusInput ? parseInt(bonusInput.value) || 0 : 0;
+  
+  const pointsFromLevel = charLevel;
+  const maxPoints = pointsFromLevel + bonusPoints;
+
+  // Check if auto-adjust is enabled
+  const autoAdjustToggle = document.getElementById('auto-adjust-toggle');
+  const isAutoAdjust = autoAdjustToggle ? autoAdjustToggle.checked : true;
+  
+  const baseline = buildIndex === 5 ? customBaselineAllocations : (build.defaultAllocations || {});
+  
+  if (isAutoAdjust) {
+    if (build.priorityList) {
+      build.allocations = autoAdjustBuild(null, maxPoints, null, build.priorityList);
+    } else {
+      const branchPriority = getBranchPriority(build);
+      build.allocations = autoAdjustBuild(baseline, maxPoints, branchPriority, null);
+    }
+  } else {
+    build.allocations = { ...baseline };
+  }
+  
   // Always calculate points dynamically to ensure consistency
   updateBuildStats(build);
   
@@ -1508,15 +1967,6 @@ window.selectBuild = function(buildIndex) {
   
   // Calculate total allocated points
   const totalAllocated = build.points.conditioning + build.points.mobility + build.points.survival;
-  
-  // Expedition limit logic (Level + Bonus points)
-  const levelInput = document.getElementById('character-level-input');
-  const bonusInput = document.getElementById('expedition-bonus-input');
-  const charLevel = levelInput ? parseInt(levelInput.value) || 1 : 75;
-  const bonusPoints = bonusInput ? parseInt(bonusInput.value) || 0 : 0;
-  
-  const pointsFromLevel = charLevel;
-  const maxPoints = pointsFromLevel + bonusPoints;
   
   const pointsCounter = document.getElementById('build-total-points');
   if (pointsCounter) {
@@ -1532,8 +1982,13 @@ window.selectBuild = function(buildIndex) {
 
   const adviceTextEl = document.getElementById('expedition-advice-text');
   if (adviceTextEl) {
+    const baselineTotal = Object.values(baseline).reduce((sum, v) => sum + v, 0);
     if (totalAllocated > maxPoints) {
       adviceTextEl.innerHTML = `<span style="color:#ef4444; font-weight:700;">LIMIT EXCEEDED!</span> Lower your requirements or remove ${totalAllocated - maxPoints} pts to activate this setup.`;
+    } else if (isAutoAdjust && totalAllocated < baselineTotal) {
+      adviceTextEl.innerHTML = `<span style="color:var(--accent-color); font-weight:700;">AUTO-ADJUSTED (Downscaled):</span> Pruned ${baselineTotal - totalAllocated} points from highest tiers to fit within limit.`;
+    } else if (isAutoAdjust && totalAllocated > baselineTotal && baselineTotal > 0) {
+      adviceTextEl.innerHTML = `<span style="color:var(--accent-color); font-weight:700;">AUTO-ADJUSTED (Upscaled):</span> Distributed ${totalAllocated - baselineTotal} extra points to match your level budget.`;
     } else {
       if (maxPoints <= 15) {
         adviceTextEl.textContent = 'Rookie stage. Prioritize Tier 1 recovery or stamina skills first.';
@@ -1600,16 +2055,237 @@ function findSkillById(skillId) {
   return null;
 }
 
+function getSkillBranch(skillId) {
+  for (const branch in SKILLS_DB) {
+    if (SKILLS_DB[branch].some(s => s.id === skillId)) {
+      return branch;
+    }
+  }
+  return null;
+}
+
+function getBranchPriority(build) {
+  if (build.branchPriority) {
+    return build.branchPriority;
+  }
+  // For Custom Build, calculate based on customBaselineAllocations
+  const points = { conditioning: 0, mobility: 0, survival: 0 };
+  Object.entries(customBaselineAllocations).forEach(([skillId, pts]) => {
+    const branch = getSkillBranch(skillId);
+    if (branch) {
+      points[branch] += pts;
+    }
+  });
+  // Sort branches by points descending
+  const sorted = Object.entries(points).sort((a, b) => b[1] - a[1]);
+  return sorted.map(entry => entry[0]);
+}
+
+function autoAdjustBuild(baseline, targetPoints, branchPriority, priorityList) {
+  if (priorityList && priorityList.length > 0) {
+    // PRESET SCALING: use the ordered priority steps
+    const allocations = {};
+    let pointsLeft = targetPoints;
+    
+    for (const step of priorityList) {
+      if (pointsLeft <= 0) break;
+      const currentPts = allocations[step.id] || 0;
+      const targetPts = step.target;
+      if (currentPts < targetPts) {
+        const needed = targetPts - currentPts;
+        const toAllocate = Math.min(needed, pointsLeft);
+        allocations[step.id] = currentPts + toAllocate;
+        pointsLeft -= toAllocate;
+      }
+    }
+    
+    // If we have remaining points (e.g. above 76 points), allocate them to other unlocked skills
+    if (pointsLeft > 0) {
+      const allSkills = [];
+      for (const branch in SKILLS_DB) {
+        SKILLS_DB[branch].forEach(s => allSkills.push(s));
+      }
+      
+      const isSkillUnlockedUnderAllocations = (skill, allocs) => {
+        if (skill.tier === 1) return true;
+        const branch = getSkillBranch(skill.id);
+        const branchSkills = SKILLS_DB[branch];
+        let t1Pts = 0;
+        let t2Pts = 0;
+        branchSkills.forEach(s => {
+          if (s.tier === 1) t1Pts += (allocs[s.id] || 0);
+          if (s.tier === 2) t2Pts += (allocs[s.id] || 0);
+        });
+        if (skill.tier === 2) return t1Pts >= 15;
+        if (skill.tier === 3) return (t1Pts + t2Pts) >= 36;
+        return false;
+      };
+      
+      while (pointsLeft > 0) {
+        const candidates = allSkills.filter(s => {
+          const current = allocations[s.id] || 0;
+          const max = getMaxPointsForSkill(s);
+          return current < max && isSkillUnlockedUnderAllocations(s, allocations);
+        });
+        
+        if (candidates.length === 0) break;
+        
+        candidates.sort((a, b) => {
+          const aHas = (allocations[a.id] || 0) > 0 ? 1 : 0;
+          const bHas = (allocations[b.id] || 0) > 0 ? 1 : 0;
+          if (aHas !== bHas) return bHas - aHas;
+          return a.id.localeCompare(b.id);
+        });
+        
+        allocations[candidates[0].id] = (allocations[candidates[0].id] || 0) + 1;
+        pointsLeft--;
+      }
+    }
+    
+    return allocations;
+  } else {
+    // CUSTOM SCALING: scale custom build based on baseline
+    return scaleCustomBuild(baseline, targetPoints, branchPriority);
+  }
+}
+
+function scaleCustomBuild(baseline, targetPoints, branchPriority) {
+  const allocations = { ...baseline };
+  
+  Object.keys(allocations).forEach(id => {
+    if (allocations[id] <= 0) delete allocations[id];
+  });
+  
+  let currentTotal = Object.values(allocations).reduce((sum, val) => sum + val, 0);
+  
+  if (currentTotal > targetPoints) {
+    while (currentTotal > targetPoints) {
+      const activeSkills = Object.keys(allocations).map(id => findSkillById(id)).filter(Boolean);
+      if (activeSkills.length === 0) break;
+      
+      const isPruneSafe = (skill) => {
+        const branch = getSkillBranch(skill.id);
+        const branchSkills = SKILLS_DB[branch];
+        
+        let t1Spent = 0;
+        let t2Spent = 0;
+        let t3Spent = 0;
+        branchSkills.forEach(s => {
+          const pts = allocations[s.id] || 0;
+          if (s.tier === 1) t1Spent += pts;
+          if (s.tier === 2) t2Spent += pts;
+          if (s.tier === 3) t3Spent += pts;
+        });
+        
+        if (skill.tier === 3) return true;
+        
+        if (skill.tier === 2) {
+          if (t3Spent > 0 && (t1Spent + t2Spent - 1) < 36) return false;
+          return true;
+        }
+        
+        if (skill.tier === 1) {
+          if (t2Spent > 0 && (t1Spent - 1) < 15) return false;
+          if (t3Spent > 0 && (t1Spent + t2Spent - 1) < 36) return false;
+          return true;
+        }
+        
+        return true;
+      };
+      
+      const safeCandidates = activeSkills.filter(isPruneSafe);
+      
+      if (safeCandidates.length === 0) {
+        // Fallback to avoid deadlocks: prune highest tier active skill
+        activeSkills.sort((a, b) => b.tier - a.tier);
+        const skillToPrune = activeSkills[0];
+        allocations[skillToPrune.id]--;
+        if (allocations[skillToPrune.id] === 0) delete allocations[skillToPrune.id];
+      } else {
+        safeCandidates.sort((a, b) => {
+          if (b.tier !== a.tier) return b.tier - a.tier;
+          const aBranch = getSkillBranch(a.id);
+          const bBranch = getSkillBranch(b.id);
+          const aBranchIdx = branchPriority.indexOf(aBranch);
+          const bBranchIdx = branchPriority.indexOf(bBranch);
+          if (bBranchIdx !== aBranchIdx) return bBranchIdx - aBranchIdx;
+          return b.id.localeCompare(a.id);
+        });
+        
+        const skillToPrune = safeCandidates[0];
+        allocations[skillToPrune.id]--;
+        if (allocations[skillToPrune.id] === 0) delete allocations[skillToPrune.id];
+      }
+      currentTotal--;
+    }
+  } else if (currentTotal < targetPoints) {
+    const allSkills = [];
+    for (const branch in SKILLS_DB) {
+      SKILLS_DB[branch].forEach(s => allSkills.push(s));
+    }
+    
+    const isSkillUnlockedUnderAllocations = (skill, allocs) => {
+      if (skill.tier === 1) return true;
+      const branch = getSkillBranch(skill.id);
+      const branchSkills = SKILLS_DB[branch];
+      let t1Pts = 0;
+      let t2Pts = 0;
+      branchSkills.forEach(s => {
+        if (s.tier === 1) t1Pts += (allocs[s.id] || 0);
+        if (s.tier === 2) t2Pts += (allocs[s.id] || 0);
+      });
+      if (skill.tier === 2) return t1Pts >= 15;
+      if (skill.tier === 3) return (t1Pts + t2Pts) >= 36;
+      return false;
+    };
+    
+    while (currentTotal < targetPoints) {
+      const candidates = allSkills.filter(s => {
+        const current = allocations[s.id] || 0;
+        const max = getMaxPointsForSkill(s);
+        return current < max && isSkillUnlockedUnderAllocations(s, allocations);
+      });
+      
+      if (candidates.length === 0) break;
+      
+      candidates.sort((a, b) => {
+        const aHasPoints = (allocations[a.id] || 0) > 0 ? 1 : 0;
+        const bHasPoints = (allocations[b.id] || 0) > 0 ? 1 : 0;
+        if (aHasPoints !== bHasPoints) return bHasPoints - aHasPoints;
+        
+        const aBranch = getSkillBranch(a.id);
+        const bBranch = getSkillBranch(b.id);
+        const aBranchIdx = branchPriority.indexOf(aBranch);
+        const bBranchIdx = branchPriority.indexOf(bBranch);
+        if (aBranchIdx !== bBranchIdx) return aBranchIdx - bBranchIdx;
+        
+        if (a.tier !== b.tier) return a.tier - b.tier;
+        return a.id.localeCompare(b.id);
+      });
+      
+      const skillToAdd = candidates[0];
+      allocations[skillToAdd.id] = (allocations[skillToAdd.id] || 0) + 1;
+      currentTotal++;
+    }
+  }
+  
+  return allocations;
+}
+
 function updateBuildStats(build) {
   // Ensure allocations dictionary exists
   if (!build.allocations) {
     build.allocations = {};
-    build.unlocked.forEach(skillId => {
-      const skill = findSkillById(skillId);
-      if (skill) {
-        build.allocations[skillId] = getMaxPointsForSkill(skill);
-      }
-    });
+    if (build.defaultAllocations) {
+      build.allocations = { ...build.defaultAllocations };
+    } else {
+      build.unlocked.forEach(skillId => {
+        const skill = findSkillById(skillId);
+        if (skill) {
+          build.allocations[skillId] = getMaxPointsForSkill(skill);
+        }
+      });
+    }
   }
   
   let condPts = 0;
@@ -1638,48 +2314,94 @@ function updateBuildStats(build) {
 window.toggleSkill = function(skillId, branchKey) {
   const customBuild = SKILL_BUILDS[5];
   
-  // If active build is one of the templates (0-4), clone its unlocked array to start
+  // If active build is one of the templates (0-4), clone its allocations to baseline to start
   if (activeBuildIndex < 5) {
     const activeTemplate = SKILL_BUILDS[activeBuildIndex];
-    customBuild.unlocked = [...activeTemplate.unlocked];
-    
-    customBuild.allocations = {};
-    if (activeTemplate.allocations) {
-      Object.assign(customBuild.allocations, activeTemplate.allocations);
-    } else {
-      activeTemplate.unlocked.forEach(id => {
-        const s = findSkillById(id);
-        if (s) customBuild.allocations[id] = getMaxPointsForSkill(s);
-      });
-    }
+    customBaselineAllocations = { ...(activeTemplate.defaultAllocations || activeTemplate.allocations || {}) };
     
     customBuild.augment = activeTemplate.augment;
     customBuild.weapons = activeTemplate.weapons;
     activeBuildIndex = 5;
   }
   
-  if (!customBuild.allocations) {
-    customBuild.allocations = {};
-  }
-  
   const skill = findSkillById(skillId);
+  if (!skill) return;
+  
   const maxPts = getMaxPointsForSkill(skill);
   
-  // Increment points
-  const currentPts = customBuild.allocations[skillId] || 0;
+  // Calculate current branch allocations under customBaselineAllocations
+  const branchSkills = SKILLS_DB[branchKey];
+  let t1Spent = 0;
+  let t2Spent = 0;
+  let t3Spent = 0;
+  branchSkills.forEach(s => {
+    const pts = customBaselineAllocations[s.id] || 0;
+    if (s.tier === 1) t1Spent += pts;
+    if (s.tier === 2) t2Spent += pts;
+    if (s.tier === 3) t3Spent += pts;
+  });
+
+  const currentPts = customBaselineAllocations[skillId] || 0;
   let nextPts = currentPts + 1;
   if (nextPts > maxPts) {
     nextPts = 0; // Wrap around to 0
   }
-  
-  if (nextPts === 0) {
-    delete customBuild.allocations[skillId];
+
+  // Calculate simulated branch totals if we apply this change
+  let newT1 = t1Spent;
+  let newT2 = t2Spent;
+  let newT3 = t3Spent;
+  if (skill.tier === 1) newT1 = t1Spent - currentPts + nextPts;
+  if (skill.tier === 2) newT2 = t2Spent - currentPts + nextPts;
+  if (skill.tier === 3) newT3 = t3Spent - currentPts + nextPts;
+
+  // Validation Checks:
+  const showErrorMsg = (msg) => {
+    const textContainer = document.getElementById('skill-detail-text');
+    if (textContainer) {
+      textContainer.innerHTML = `
+        <div style="margin-bottom:0.5rem; display:flex; justify-content:space-between; align-items:center;">
+          <strong style="color:#ef4444; font-size:1.05rem;"><i class="fa-solid fa-triangle-exclamation"></i> Action Blocked</strong>
+        </div>
+        <div style="line-height:1.5; color:#f87171; font-size:0.9rem; margin-bottom:0.5rem;">
+          ${msg}
+        </div>
+        <div style="font-size:0.75rem; color:var(--text-muted); border-top: 1px dashed var(--panel-border); padding-top: 0.5rem; margin-top: 0.5rem;">
+          <i class="fa-solid fa-circle-info" style="color:#ef4444; margin-right:0.25rem;"></i>
+          Prerequisite requirements not met or removal would violate higher-tier allocations.
+        </div>
+      `;
+    }
+  };
+
+  if (nextPts > currentPts) {
+    // Increment: check locks
+    if (skill.tier === 2 && t1Spent < 15) {
+      showErrorMsg(`Cannot invest in Tier 2: requires at least 15 points spent in Tier 1 of this branch (currently has ${t1Spent} pts).`);
+      return;
+    }
+    if (skill.tier === 3 && (t1Spent + t2Spent) < 36) {
+      showErrorMsg(`Cannot invest in Tier 3: requires at least 36 points spent in Tiers 1 & 2 of this branch (currently has ${t1Spent + t2Spent} pts).`);
+      return;
+    }
   } else {
-    customBuild.allocations[skillId] = nextPts;
+    // Decrement or reset to 0: check if we violate requirements of remaining active skills
+    if ((t2Spent > 0 || t3Spent > 0) && newT1 < 15) {
+      showErrorMsg(`Cannot remove points: this would reduce Tier 1 spent to ${newT1} pts (minimum 15 required), but you still have points allocated in Tier 2/3.`);
+      return;
+    }
+    if (t3Spent > 0 && (newT1 + newT2) < 36) {
+      showErrorMsg(`Cannot remove points: this would reduce Tiers 1 & 2 combined spent to ${newT1 + newT2} pts (minimum 36 required), but you still have points allocated in Tier 3.`);
+      return;
+    }
   }
-  
-  // Re-calculate points for custom build
-  updateBuildStats(customBuild);
+
+  // If validation passes, apply change
+  if (nextPts === 0) {
+    delete customBaselineAllocations[skillId];
+  } else {
+    customBaselineAllocations[skillId] = nextPts;
+  }
   
   // Update sidebar selection visual
   document.querySelectorAll('.build-card').forEach((card, i) => {
@@ -1692,15 +2414,44 @@ window.toggleSkill = function(skillId, branchKey) {
   
   // Update details panel to keep focus on toggled skill
   if (skill) {
-    const isUnlockedNow = nextPts > 0;
-    showSkillDetail(skill, isUnlockedNow, branchKey, nextPts);
+    const activeAllocatedPts = customBuild.allocations[skillId] || 0;
+    const isUnlockedNow = activeAllocatedPts > 0;
+    // Calculate if it is locked under the newly rendered allocations
+    const { isLocked } = checkSkillLockState(skill, customBuild.allocations);
+    showSkillDetail(skill, isUnlockedNow, branchKey, activeAllocatedPts, isLocked);
   }
 };
+
+// Helper to determine skill lock state dynamically
+function checkSkillLockState(skill, allocations) {
+  if (skill.tier === 1) return { isLocked: false };
+  
+  const branch = getSkillBranch(skill.id);
+  const branchSkills = SKILLS_DB[branch];
+  
+  let t1Spent = 0;
+  let t2Spent = 0;
+  branchSkills.forEach(s => {
+    const pts = allocations[s.id] || 0;
+    if (s.tier === 1) t1Spent += pts;
+    if (s.tier === 2) t2Spent += pts;
+  });
+  
+  if (skill.tier === 2) {
+    return { isLocked: t1Spent < 15, req: 15, current: t1Spent, tierTarget: 1 };
+  }
+  if (skill.tier === 3) {
+    return { isLocked: (t1Spent + t2Spent) < 36, req: 36, current: t1Spent + t2Spent, tierTarget: 2 };
+  }
+  
+  return { isLocked: false };
+}
 
 window.resetCustomBuild = function() {
   const customBuild = SKILL_BUILDS[5];
   customBuild.unlocked = [];
   customBuild.allocations = {};
+  customBaselineAllocations = {};
   customBuild.weapons = 'None / Custom Loadout';
   customBuild.augment = 'None / Custom Loadout';
   updateBuildStats(customBuild);
@@ -1710,6 +2461,104 @@ window.resetCustomBuild = function() {
 window.updateExpeditionLimit = function() {
   selectBuild(activeBuildIndex);
 };
+
+function getSkillScaleInfo(id) {
+  const db = {
+    used_to_weight: { pattern: 'Reduces movement speed penalty by {val}% when wearing a shield.', calc: (p) => p * 6 },
+    blast_born: { pattern: 'Reduces the duration of hearing impairment and shake caused by nearby explosions by {val}%.', calc: (p) => p * 10 },
+    a_little_extra: { pattern: 'Breaching doors and containers generates additional random crafting materials (Level {val}).', calc: (p) => p },
+    effortless_swing: { pattern: 'Reduces the stamina cost of all melee attacks by {val}%.', calc: (p) => p * 5 },
+    sky_clearing_swing: { pattern: 'Increases melee damage against airborne drones by {val}%.', calc: (p) => p * 10 },
+    proficient_pryer: { pattern: 'Reduces container and door prying time by {val}%.', calc: (p) => p * 5 },
+    gentle_pressure: { pattern: 'Reduces noise made when breaching doors or containers by {val}%.', calc: (p) => p * 8 },
+    turtle_crawl: { pattern: 'Reduces damage taken by {val}% while in a downed (crawling) state.', calc: (p) => p * 8 },
+    fight_or_flight: { pattern: 'Regain {val} stamina instantly when taking damage in combat (15s cooldown).', calc: (p) => p * 3 },
+    downed_determined: { pattern: 'Increases bleed-out time when downed by {val}%, giving allies more time to revive you.', calc: (p) => p * 6 },
+    marathon_runner: { pattern: 'Sprinting consumes {val}% less stamina.', calc: (p) => p * 4 },
+    youthful_lungs: { pattern: 'Increases maximum stamina pool by {val} points.', calc: (p) => p * 5 },
+    nimble_climber: { pattern: 'Increases climbing, vaulting, and ladder traversal speeds by {val}%.', calc: (p) => p * 6 },
+    effortless_roll: { pattern: 'Reduces the stamina cost of dodge rolls by {val}%.', calc: (p) => p * 5 },
+    sturdy_ankles: { pattern: 'Reduces falling damage by {val}% from non-lethal heights.', calc: (p) => p * 10 },
+    slip_slide: { pattern: 'Increases slide distance by {val1}% and slide speed by {val2}%.', calcMulti: (p) => ({ val1: p * 5, val2: p * 3 }) },
+    heroic_leap: { pattern: 'Increases the distance of sprint dodge rolls by {val}%.', calc: (p) => p * 6 },
+    crawl_before_walk: { pattern: 'Increases movement speed while in a downed crawling state by {val}%.', calc: (p) => p * 8 },
+    ready_to_roll: { pattern: 'Increases the timing window for a recovery roll after falling to avoid damage by {val}%.', calc: (p) => p * 20 },
+    off_the_wall: { pattern: 'Increases wall-bound leap distance by {val}%.', calc: (p) => p * 8 },
+    agile_croucher: { pattern: 'Increases crouching movement speed by {val}%.', calc: (p) => p * 5 },
+    silent_scavenger: { pattern: 'Reduces the radius of noise generated when searching containers by {val}%.', calc: (p) => p * 10 },
+    revitalizing_squat: { pattern: 'Increases stamina regeneration rate by {val}% while crouched.', calc: (p) => p * 4 },
+    good_as_new: { pattern: 'Increases stamina regeneration rate by {val}% while under healing effects.', calc: (p) => p * 6 },
+    suffer_in_silence: { pattern: 'Reduces noise generated by your movement when critically injured by {val}%.', calc: (p) => p * 10 },
+    looters_luck: { pattern: 'Increases the chance of finding rare components in industrial chests by {val}%.', calc: (p) => p * 3 },
+    three_deep_breaths: { pattern: 'Reduces the stamina recovery delay by {val}% after an ability completely drains it.', calc: (p) => p * 6 },
+    one_raiders_scraps: { pattern: 'Adds a {val}% chance to find additional field-crafted utility items inside containers.', calc: (p) => p * 3 },
+    broad_shoulders: { pattern: 'Increases maximum carry weight limit by up to {val} kg.', calc: (p) => (p * 5.0).toFixed(1) },
+    looters_instincts: { pattern: 'Container icons are highlighted through walls within a {val}-meter range.', calc: (p) => p * 3 },
+    stubborn_mule: { pattern: 'Reduces the movement speed penalty and stamina drain when over-encumbered by {val}%.', calc: (p) => p * 8 }
+  };
+  return db[id] || null;
+}
+
+function formatDescPattern(pattern, val) {
+  if (typeof val === 'object') {
+    let result = pattern;
+    for (const key in val) {
+      result = result.replace(`{${key}}`, val[key]);
+    }
+    return result;
+  }
+  return pattern.replace('{val}', val);
+}
+
+function getSkillDescriptionHTML(skill, allocatedPoints) {
+  const maxPts = skill.maxPoints || 5;
+  let html = '';
+  
+  if (maxPts === 1) {
+    html += `<div style="color:var(--text-secondary); line-height:1.4; font-size:0.78rem; font-family:var(--font-sans); font-weight:400;">${skill.desc}</div>`;
+  } else {
+    const scaleInfo = getSkillScaleInfo(skill.id);
+    if (scaleInfo) {
+      const displayLvl = Math.max(1, allocatedPoints);
+      const currentVal = scaleInfo.calcMulti ? scaleInfo.calcMulti(displayLvl) : scaleInfo.calc(displayLvl);
+      const currentDesc = formatDescPattern(scaleInfo.pattern, currentVal);
+      
+      html += `<div style="color:var(--text-secondary); line-height:1.4; font-size:0.78rem; font-family:var(--font-sans); font-weight:400; margin-bottom:0.4rem;">${currentDesc}</div>`;
+      
+      html += `<div style="border-top: 1px dashed rgba(255,255,255,0.08); padding-top:0.35rem; margin-top:0.35rem; font-size:0.7rem; font-family:var(--font-mono); display:flex; flex-direction:column; gap:0.15rem;">`;
+      for (let lvl = 1; lvl <= maxPts; lvl++) {
+        const val = scaleInfo.calcMulti ? scaleInfo.calcMulti(lvl) : scaleInfo.calc(lvl);
+        const descText = formatDescPattern(scaleInfo.pattern, val);
+        const isActive = lvl === allocatedPoints;
+        const isNext = lvl === allocatedPoints + 1;
+        
+        let color = 'rgba(255,255,255,0.3)';
+        let prefix = '○';
+        let weight = 'normal';
+        if (isActive) {
+          color = 'var(--accent-color)';
+          prefix = '● [Active]';
+          weight = 'bold';
+        } else if (isNext && allocatedPoints > 0) {
+          color = 'var(--text-secondary)';
+          prefix = '○ [Next]';
+        } else if (allocatedPoints === 0 && lvl === 1) {
+          color = 'var(--text-secondary)';
+          prefix = '○ [Next]';
+        }
+        
+        html += `<div style="color:${color}; font-weight:${weight}; display:flex; gap:0.25rem;">`;
+        html += `<span style="white-space:nowrap; flex-shrink:0; width:55px;">${prefix} Lvl ${lvl}:</span>`;
+        html += `<span style="flex:1;">${descText}</span>`;
+        html += `</div>`;
+      }
+      html += `</div>`;
+    } else {
+      html += `<div style="color:var(--text-secondary); line-height:1.4; font-size:0.78rem; font-family:var(--font-sans); font-weight:400;">${skill.desc}</div>`;
+    }
+  }
+  return html;
+}
 
 function renderBranchNodes(branchKey, build) {
   const container = document.getElementById(`nodes-${branchKey}`);
@@ -1726,35 +2575,91 @@ function renderBranchNodes(branchKey, build) {
       if (s) build.allocations[id] = getMaxPointsForSkill(s);
     });
   }
+
+  // Group skills by tier (1, 2, 3)
+  const tiers = { 1: [], 2: [], 3: [] };
+  skills.forEach(s => {
+    if (tiers[s.tier]) {
+      tiers[s.tier].push(s);
+    } else {
+      tiers[1].push(s);
+    }
+  });
   
-  skills.forEach(skill => {
-    const allocatedPoints = build.allocations[skill.id] || 0;
-    const maxPts = getMaxPointsForSkill(skill);
-    const isUnlocked = allocatedPoints > 0;
+  // Render each tier
+  Object.keys(tiers).forEach(tierNum => {
+    const tierSkills = tiers[tierNum];
+    if (tierSkills.length === 0) return;
     
-    const card = document.createElement('div');
-    card.className = `skill-node-card ${isUnlocked ? `unlocked ${branchKey}` : 'locked'}`;
+    // Add Tier Divider
+    const divider = document.createElement('div');
+    divider.className = 'tier-divider';
     
-    card.onmouseover = () => showSkillDetail(skill, isUnlocked, branchKey, allocatedPoints);
-    card.onclick = () => toggleSkill(skill.id, branchKey);
+    let reqText = '';
+    if (tierNum == 1) reqText = '0 pts req.';
+    else if (tierNum == 2) reqText = '15 pts req.';
+    else if (tierNum == 3) reqText = '36 pts req.';
     
-    card.innerHTML = `
-      <div class="skill-node-icon">
-        <i class="fa-solid ${skill.icon}"></i>
-      </div>
-      <div style="display:flex; flex-direction:column; gap:0.15rem; flex:1;">
-        <span class="skill-node-name">${skill.name}</span>
-        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.6rem; color:var(--text-muted); font-family:var(--font-mono);">
-          <span>Tier ${skill.tier}</span>
-          <span class="node-point-counter" style="color: ${isUnlocked ? 'var(--accent-color)' : 'var(--text-muted)'}; font-weight:${isUnlocked ? '700' : '400'};">${allocatedPoints}/${maxPts}</span>
-        </div>
-      </div>
+    divider.innerHTML = `
+      <span class="tier-divider-text">Tier ${tierNum} <span style="font-size:0.55rem; color:var(--text-muted); font-weight:400; text-transform:none; margin-left:0.25rem;">(${reqText})</span></span>
     `;
-    container.appendChild(card);
+    container.appendChild(divider);
+    
+    tierSkills.forEach(skill => {
+      const allocatedPoints = build.allocations[skill.id] || 0;
+      const maxPts = getMaxPointsForSkill(skill);
+      const isUnlocked = allocatedPoints > 0;
+      
+      const { isLocked } = checkSkillLockState(skill, build.allocations);
+      
+      const card = document.createElement('div');
+      card.className = `skill-node-card ${isLocked ? 'tier-locked' : (isUnlocked ? `unlocked ${branchKey}` : 'locked')}`;
+      
+      card.onmouseover = () => showSkillDetail(skill, isUnlocked, branchKey, allocatedPoints, isLocked);
+      card.onclick = () => toggleSkill(skill.id, branchKey);
+      
+      let lockIcon = isLocked ? `<i class="fa-solid fa-lock" style="margin-left:0.25rem; font-size:0.65rem; color:#ef4444;" title="Tier Locked"></i>` : '';
+      
+      let tooltipStatus = '';
+      if (isLocked) {
+        let req = skill.tier === 2 ? 'Requires 15 pts in Tier 1' : 'Requires 36 pts in Tiers 1 & 2';
+        tooltipStatus = `<span style="color:#ef4444; font-weight:700;"><i class="fa-solid fa-lock" style="margin-right:0.15rem;"></i>LOCKED (${req})</span>`;
+      } else if (allocatedPoints > 0) {
+        tooltipStatus = `<span style="color:var(--accent-color); font-weight:700;">INVESTED: ${allocatedPoints}/${maxPts} PTS</span>`;
+      } else {
+        tooltipStatus = `<span style="color:var(--text-muted);">NOT INVESTED</span>`;
+      }
+
+      card.innerHTML = `
+        <div class="skill-node-icon">
+          <i class="fa-solid ${skill.icon}"></i>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:0.15rem; flex:1;">
+          <span class="skill-node-name">${skill.name} ${lockIcon}</span>
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.72rem; color:var(--text-muted); font-family:var(--font-mono);">
+            <span>Max: ${maxPts} pts</span>
+            <span class="node-point-counter" style="color: ${isUnlocked ? 'var(--accent-color)' : 'var(--text-muted)'}; font-weight:${isUnlocked ? '700' : '400'};">${allocatedPoints}/${maxPts}</span>
+          </div>
+        </div>
+        
+        <!-- Hover Tooltip -->
+        <div class="skill-tooltip">
+          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.35rem; margin-bottom:0.35rem; font-weight:700; gap:0.5rem;">
+            <span style="color:#fff; font-size:0.88rem; font-weight:700; white-space:nowrap; text-overflow:ellipsis; overflow:hidden; max-width:160px;">${skill.name}</span>
+            <span style="font-size:0.7rem; font-family:var(--font-mono); white-space:nowrap;">${tooltipStatus}</span>
+          </div>
+          <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; margin-bottom:0.35rem; font-family:var(--font-mono);">
+            Tier ${skill.tier} | ${branchKey.charAt(0).toUpperCase() + branchKey.slice(1)}
+          </div>
+          ${getSkillDescriptionHTML(skill, allocatedPoints)}
+        </div>
+      `;
+      container.appendChild(card);
+    });
   });
 }
 
-function showSkillDetail(skill, isUnlocked, branchKey, allocatedPoints = 0) {
+function showSkillDetail(skill, isUnlocked, branchKey, allocatedPoints = 0, isTierLocked = false) {
   const textContainer = document.getElementById('skill-detail-text');
   if (!textContainer) return;
   
@@ -1762,7 +2667,10 @@ function showSkillDetail(skill, isUnlocked, branchKey, allocatedPoints = 0) {
   const maxPts = getMaxPointsForSkill(skill);
   
   let statusHtml = '';
-  if (allocatedPoints > 0) {
+  if (isTierLocked) {
+    let req = skill.tier === 2 ? '15 pts spent in Tier 1' : '36 pts spent in Tiers 1 & 2';
+    statusHtml = `<span style="color:#ef4444; font-weight:700;"><i class="fa-solid fa-lock"></i> LOCKED (Requires ${req})</span>`;
+  } else if (allocatedPoints > 0) {
     statusHtml = `<span style="color:var(--accent-color); font-weight:700;">[INVESTED: ${allocatedPoints}/${maxPts} PTS]</span>`;
   } else {
     statusHtml = `<span style="color:var(--text-muted);">[NOT INVESTED]</span>`;
@@ -1770,16 +2678,16 @@ function showSkillDetail(skill, isUnlocked, branchKey, allocatedPoints = 0) {
     
   textContainer.innerHTML = `
     <div style="margin-bottom:0.5rem; display:flex; justify-content:space-between; align-items:center;">
-      <strong style="color:#fff; font-size:0.95rem;">${skill.name}</strong>
+      <strong style="color:#fff; font-size:1.1rem;">${skill.name}</strong>
       ${statusHtml}
     </div>
-    <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.5rem; font-family:var(--font-mono); text-transform:uppercase;">
+    <div style="font-size:0.82rem; color:var(--text-muted); margin-bottom:0.5rem; font-family:var(--font-mono); text-transform:uppercase;">
       Branch: ${branchName} | Tier: ${skill.tier} (Max: ${maxPts} pts)
     </div>
-    <div style="line-height:1.5; color:var(--text-secondary); margin-bottom:0.5rem;">
-      ${skill.desc}
+    <div style="margin-bottom:0.5rem;">
+      ${getSkillDescriptionHTML(skill, allocatedPoints)}
     </div>
-    <div style="font-size:0.7rem; color:var(--text-muted); border-top: 1px dashed var(--panel-border); padding-top: 0.5rem; margin-top: 0.5rem;">
+    <div style="font-size:0.78rem; color:var(--text-muted); border-top: 1px dashed var(--panel-border); padding-top: 0.5rem; margin-top: 0.5rem;">
       <i class="fa-solid fa-circle-info" style="color: var(--accent-color); margin-right:0.25rem;"></i>
       Click node to increment points (wraps to 0 at max).
     </div>
