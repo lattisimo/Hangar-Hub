@@ -2359,7 +2359,7 @@ window.toggleSkill = function(skillId, branchKey) {
   // If active build is one of the templates (0-6), clone its allocations to baseline to start
   if (activeBuildIndex < 7) {
     const activeTemplate = SKILL_BUILDS[activeBuildIndex];
-    customBaselineAllocations = { ...(activeTemplate.defaultAllocations || activeTemplate.allocations || {}) };
+    customBaselineAllocations = { ...(activeTemplate.allocations || activeTemplate.defaultAllocations || {}) };
     customBuild.allocations = { ...customBaselineAllocations };
     customBuild.augment = activeTemplate.augment;
     customBuild.weapons = activeTemplate.weapons;
