@@ -1515,7 +1515,7 @@ window.selectBuild = function(buildIndex) {
   const charLevel = levelInput ? parseInt(levelInput.value) || 1 : 75;
   const bonusPoints = bonusInput ? parseInt(bonusInput.value) || 0 : 0;
   
-  const pointsFromLevel = charLevel + 1;
+  const pointsFromLevel = charLevel;
   const maxPoints = pointsFromLevel + bonusPoints;
   
   const pointsCounter = document.getElementById('build-total-points');
