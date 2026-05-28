@@ -2480,35 +2480,10 @@ function getSkillDescriptionHTML(skill, allocatedPoints) {
       const currentVal = scaleInfo.calcMulti ? scaleInfo.calcMulti(displayLvl) : scaleInfo.calc(displayLvl);
       const currentDesc = formatDescPattern(scaleInfo.pattern, currentVal);
       
-      html += `<div style="color:var(--text-secondary); line-height:1.4; font-size:0.78rem; font-family:var(--font-sans); font-weight:400; margin-bottom:0.4rem;">${currentDesc}</div>`;
-      
-      html += `<div style="border-top: 1px dashed rgba(255,255,255,0.08); padding-top:0.35rem; margin-top:0.35rem; font-size:0.7rem; font-family:var(--font-mono); display:flex; flex-direction:column; gap:0.15rem;">`;
-      for (let lvl = 1; lvl <= maxPts; lvl++) {
-        const val = scaleInfo.calcMulti ? scaleInfo.calcMulti(lvl) : scaleInfo.calc(lvl);
-        const descText = formatDescPattern(scaleInfo.pattern, val);
-        const isActive = lvl === allocatedPoints;
-        const isNext = lvl === allocatedPoints + 1;
-        
-        let color = 'rgba(255,255,255,0.3)';
-        let prefix = '○';
-        let weight = 'normal';
-        if (isActive) {
-          color = 'var(--accent-color)';
-          prefix = '● [Active]';
-          weight = 'bold';
-        } else if (isNext && allocatedPoints > 0) {
-          color = 'var(--text-secondary)';
-          prefix = '○ [Next]';
-        } else if (allocatedPoints === 0 && lvl === 1) {
-          color = 'var(--text-secondary)';
-          prefix = '○ [Next]';
-        }
-        
-        html += `<div style="color:${color}; font-weight:${weight}; display:flex; gap:0.25rem;">`;
-        html += `<span style="white-space:nowrap; flex-shrink:0; width:55px;">${prefix} Lvl ${lvl}:</span>`;
-        html += `<span style="flex:1;">${descText}</span>`;
-        html += `</div>`;
-      }
+      const statusPrefix = allocatedPoints > 0 ? `Lvl ${allocatedPoints} (Active):` : `Lvl 1 (Preview):`;
+      html += `<div style="color:var(--text-secondary); line-height:1.4; font-size:0.78rem; font-family:var(--font-sans); font-weight:400;">`;
+      html += `<strong style="color:${allocatedPoints > 0 ? 'var(--accent-color)' : 'var(--text-muted)'}; margin-right:0.25rem;">${statusPrefix}</strong>`;
+      html += `${currentDesc}`;
       html += `</div>`;
     } else {
       html += `<div style="color:var(--text-secondary); line-height:1.4; font-size:0.78rem; font-family:var(--font-sans); font-weight:400;">${skill.desc}</div>`;
