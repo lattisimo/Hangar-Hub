@@ -2219,54 +2219,8 @@ function scaleCustomBuild(baseline, targetPoints, branchPriority) {
       currentTotal--;
     }
   } else if (currentTotal < targetPoints) {
-    const allSkills = [];
-    for (const branch in SKILLS_DB) {
-      SKILLS_DB[branch].forEach(s => allSkills.push(s));
-    }
-    
-    const isSkillUnlockedUnderAllocations = (skill, allocs) => {
-      if (skill.tier === 1) return true;
-      const branch = getSkillBranch(skill.id);
-      const branchSkills = SKILLS_DB[branch];
-      let t1Pts = 0;
-      let t2Pts = 0;
-      branchSkills.forEach(s => {
-        if (s.tier === 1) t1Pts += (allocs[s.id] || 0);
-        if (s.tier === 2) t2Pts += (allocs[s.id] || 0);
-      });
-      if (skill.tier === 2) return t1Pts >= 15;
-      if (skill.tier === 3) return (t1Pts + t2Pts) >= 36;
-      return false;
-    };
-    
-    while (currentTotal < targetPoints) {
-      const candidates = allSkills.filter(s => {
-        const current = allocations[s.id] || 0;
-        const max = getMaxPointsForSkill(s);
-        return current < max && isSkillUnlockedUnderAllocations(s, allocations);
-      });
-      
-      if (candidates.length === 0) break;
-      
-      candidates.sort((a, b) => {
-        const aHasPoints = (allocations[a.id] || 0) > 0 ? 1 : 0;
-        const bHasPoints = (allocations[b.id] || 0) > 0 ? 1 : 0;
-        if (aHasPoints !== bHasPoints) return bHasPoints - aHasPoints;
-        
-        const aBranch = getSkillBranch(a.id);
-        const bBranch = getSkillBranch(b.id);
-        const aBranchIdx = branchPriority.indexOf(aBranch);
-        const bBranchIdx = branchPriority.indexOf(bBranch);
-        if (aBranchIdx !== bBranchIdx) return aBranchIdx - bBranchIdx;
-        
-        if (a.tier !== b.tier) return a.tier - b.tier;
-        return a.id.localeCompare(b.id);
-      });
-      
-      const skillToAdd = candidates[0];
-      allocations[skillToAdd.id] = (allocations[skillToAdd.id] || 0) + 1;
-      currentTotal++;
-    }
+    // Disable automatic upscaling for custom builds to allow manual/incremental allocation.
+    // This prevents the system from automatically filling in remaining points.
   }
   
   return allocations;
@@ -2318,10 +2272,13 @@ window.toggleSkill = function(skillId, branchKey) {
   if (activeBuildIndex < 5) {
     const activeTemplate = SKILL_BUILDS[activeBuildIndex];
     customBaselineAllocations = { ...(activeTemplate.defaultAllocations || activeTemplate.allocations || {}) };
-    
+    customBuild.allocations = { ...customBaselineAllocations };
     customBuild.augment = activeTemplate.augment;
     customBuild.weapons = activeTemplate.weapons;
     activeBuildIndex = 5;
+  } else {
+    // Sync the baseline with currently active/visible allocations to prevent stale/hidden state overrides
+    customBaselineAllocations = { ...customBuild.allocations };
   }
   
   const skill = findSkillById(skillId);
