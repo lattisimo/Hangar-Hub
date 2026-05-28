@@ -1679,9 +1679,56 @@ const SKILLS_DB = {
 
 const SKILL_BUILDS = [
   {
+    name: 'PvP Apex Skirmisher',
+    summary: 'High-mobility aggressive player hunter',
+    desc: 'Optimized for high-stakes player-vs-player combat. Maximizes dodge rolls, sprint stamina, and shield break recovery, while utilizing loaded weapon weight reductions to carry heavy combat gear.',
+    focus: 'PvP',
+    risk: 'High',
+    points: { conditioning: 24, mobility: 37, survival: 15 },
+    augment: 'Combat Mk. 3 (Aggressive)',
+    weapons: 'Tempest IV (Assault Rifle), Osprey IV (Sniper) | Grenades, Combat Stimulants, Shield Rechargers',
+    unlocked: [],
+    defaultAllocations: {
+      blast_born: 5, effortless_swing: 5, a_little_extra: 5, loaded_arms: 1, unburdened_roll: 1,
+      turtle_crawl: 5, proficient_pryer: 2, marathon_runner: 5, youthful_lungs: 5, nimble_climber: 5,
+      effortless_roll: 5, slip_slide: 5, heroic_leap: 5, ready_to_roll: 5, vigorous_vaulter: 1,
+      carry_momentum: 1, agile_croucher: 5, silent_scavenger: 5, good_as_new: 5
+    },
+    priorityList: [
+      { id: 'marathon_runner', target: 1 },
+      { id: 'youthful_lungs', target: 1 },
+      { id: 'agile_croucher', target: 1 },
+      { id: 'silent_scavenger', target: 1 },
+      { id: 'blast_born', target: 1 },
+      { id: 'effortless_swing', target: 1 },
+      { id: 'marathon_runner', target: 5 },
+      { id: 'youthful_lungs', target: 5 },
+      { id: 'agile_croucher', target: 5 },
+      { id: 'silent_scavenger', target: 5 },
+      { id: 'blast_born', target: 5 },
+      { id: 'effortless_swing', target: 5 },
+      { id: 'nimble_climber', target: 5 },
+      { id: 'effortless_roll', target: 5 },
+      { id: 'slip_slide', target: 5 },
+      { id: 'heroic_leap', target: 5 },
+      { id: 'ready_to_roll', target: 5 },
+      { id: 'vigorous_vaulter', target: 1 },
+      { id: 'carry_momentum', target: 1 },
+      { id: 'good_as_new', target: 5 },
+      { id: 'a_little_extra', target: 5 },
+      { id: 'loaded_arms', target: 1 },
+      { id: 'unburdened_roll', target: 1 },
+      { id: 'turtle_crawl', target: 5 },
+      { id: 'proficient_pryer', target: 2 }
+    ],
+    branchPriority: ['mobility', 'conditioning', 'survival']
+  },
+  {
     name: 'Pure Scavenger',
     summary: 'Survival-heavy solo loot collector',
     desc: 'Designed for maximizing scrap extraction. Focuses on carrying massive weight, looting silently, crouching stealthily, and evading combat patrols.',
+    focus: 'Mixed',
+    risk: 'High',
     points: { conditioning: 10, mobility: 20, survival: 46 },
     augment: 'Looting Mk. 3 (Survivor)',
     weapons: 'Renegade IV (Battle Rifle), Light Shield | Heals, Shield Rechargers, Ammo',
@@ -1722,6 +1769,8 @@ const SKILL_BUILDS = [
     name: 'Combat Vanguard',
     summary: 'Shield-tanking front-line brawler',
     desc: 'Optimized for heavy combat, door-breaching, and team defense. Negates speed penalties when carrying shields, resists blasts, and recovers stamina under fire.',
+    focus: 'PvE',
+    risk: 'High',
     points: { conditioning: 49, mobility: 22, survival: 5 },
     augment: 'Tactical Mk. 3 (Defensive)',
     weapons: 'Torrente IV (LMG), Heavy Shield | Surge Medical Kits, Shield Rechargers, Heavy Ammo',
@@ -1764,6 +1813,8 @@ const SKILL_BUILDS = [
     name: 'High-Mobility Scout',
     summary: 'Traversal speed runner & pathfinder',
     desc: 'Unmatched speed and vertical parkour agility. Slides, vaults, and climbs through ruins to locate drop zones and extraction points before patrol bots spot you.',
+    focus: 'Mixed',
+    risk: 'Medium',
     points: { conditioning: 10, mobility: 45, survival: 21 },
     augment: 'Looting Mk. 3 (Cautious)',
     weapons: 'Stitcher IV (SMG), Light Shield | Stimulants, Heals, Standard Ammo',
@@ -1806,6 +1857,8 @@ const SKILL_BUILDS = [
     name: 'Stealth Infiltrator',
     summary: 'Quiet lockbreaker & vault burglar',
     desc: 'Sneaks past ARC defenses, opens secure doors/vaults silently, and escapes with rare blueprints. Ideal for high-risk, low-detection looting raids.',
+    focus: 'Mixed',
+    risk: 'High',
     points: { conditioning: 21, mobility: 10, survival: 45 },
     augment: 'Looting Mk. 3 (Safekeeper)',
     weapons: 'Osprey IV (Sniper), Light Shield | Silenced Pistol, Decoys, Ammo',
@@ -1846,6 +1899,8 @@ const SKILL_BUILDS = [
     name: 'Outpost Tinkerer',
     summary: 'Survival craftsman & gadget support',
     desc: 'Controls zones and supports squad survival by field-crafting traps, decoys, and healing sprays topside. Highly self-sufficient in late raids.',
+    focus: 'PvE',
+    risk: 'Medium',
     points: { conditioning: 19, mobility: 15, survival: 42 },
     augment: 'Tactical Mk. 3 (Healing)',
     weapons: 'Rattler IV (Assault Rifle), Medium Shield | Nanite Healers, Deployable Turrets, Ammo',
@@ -1887,6 +1942,8 @@ const SKILL_BUILDS = [
     name: 'Naked Scrapper',
     summary: 'Zero-to-Hero fists & stealth scavenger',
     desc: 'Designed for extreme Zero-to-Hero runs. Starts with no weapons, shields, or custom augments. Relies on melee damage (fists), fast crouching, silent search, and traversal stamina to survive and carry found loot home.',
+    focus: 'Mixed',
+    risk: 'Zero',
     points: { conditioning: 15, mobility: 15, survival: 46 },
     augment: 'None (Bare Bones)',
     weapons: 'None (Bare Bones) | Fists / Melee',
@@ -1932,6 +1989,8 @@ const SKILL_BUILDS = [
     name: 'Freeloader',
     summary: 'Low-risk starter kit value runner',
     desc: 'Uses only the basic free gear provided by default (Free Loadout Augment, Ferro I, Hairpin I). Focuses on balanced stamina recovery, trap awareness, and scrap prying to secure profit with zero investment risk.',
+    focus: 'Mixed',
+    risk: 'Low',
     points: { conditioning: 10, mobility: 20, survival: 46 },
     augment: 'Free Loadout (Basic)',
     weapons: 'Ferro I (Battle Rifle), Hairpin I (Pistol) | Bandages, Light/Medium Ammo',
@@ -2002,6 +2061,12 @@ window.initSkillPlanner = function() {
     card.innerHTML = `
       <div class="build-card-title">${build.name}</div>
       <div class="build-card-summary">${build.summary}</div>
+      ${build.focus ? `
+        <div class="build-card-badges">
+          <span class="badge badge-focus badge-${build.focus.toLowerCase().replace('/', '-')}" title="Core Focus: ${build.focus}">${build.focus}</span>
+          <span class="badge badge-risk badge-${build.risk.toLowerCase()}" title="Risk Profile: ${build.risk} Risk">${build.risk} Risk</span>
+        </div>
+      ` : ''}
     `;
     listContainer.appendChild(card);
   });
@@ -2033,7 +2098,7 @@ window.selectBuild = function(buildIndex) {
   const autoAdjustToggle = document.getElementById('auto-adjust-toggle');
   const isAutoAdjust = autoAdjustToggle ? autoAdjustToggle.checked : true;
   
-  const baseline = buildIndex === 7 ? customBaselineAllocations : (build.defaultAllocations || {});
+  const baseline = buildIndex === 8 ? customBaselineAllocations : (build.defaultAllocations || {});
   
   if (isAutoAdjust) {
     if (build.priorityList) {
@@ -2050,7 +2115,13 @@ window.selectBuild = function(buildIndex) {
   updateBuildStats(build);
   
   // Update header/descriptions
-  document.getElementById('active-build-title').textContent = `${build.name} Skill Matrix`;
+  document.getElementById('active-build-title').innerHTML = `
+    ${build.name} Skill Matrix
+    ${build.focus ? `
+      <span class="active-badge badge-focus badge-${build.focus.toLowerCase().replace('/', '-')}" style="margin-left:0.5rem; vertical-align:middle;">${build.focus}</span>
+      <span class="active-badge badge-risk badge-${build.risk.toLowerCase()}" style="margin-left:0.25rem; vertical-align:middle;">${build.risk} Risk</span>
+    ` : ''}
+  `;
   document.getElementById('active-build-desc').innerHTML = build.desc;
   
   // Calculate total allocated points
@@ -2118,7 +2189,7 @@ window.selectBuild = function(buildIndex) {
   // Toggle reset button visibility
   const resetBtn = document.getElementById('reset-build-btn');
   if (resetBtn) {
-    resetBtn.style.display = buildIndex === 7 ? 'block' : 'none';
+    resetBtn.style.display = buildIndex === 8 ? 'block' : 'none';
   }
 
   // Render nodes for each branch
@@ -2367,16 +2438,16 @@ function updateBuildStats(build) {
 }
 
 window.toggleSkill = function(skillId, branchKey) {
-  const customBuild = SKILL_BUILDS[7];
+  const customBuild = SKILL_BUILDS[8];
   
-  // If active build is one of the templates (0-6), clone its allocations to baseline to start
-  if (activeBuildIndex < 7) {
+  // If active build is one of the templates (0-7), clone its allocations to baseline to start
+  if (activeBuildIndex < 8) {
     const activeTemplate = SKILL_BUILDS[activeBuildIndex];
     customBaselineAllocations = { ...(activeTemplate.allocations || activeTemplate.defaultAllocations || {}) };
     customBuild.allocations = { ...customBaselineAllocations };
     customBuild.augment = activeTemplate.augment;
     customBuild.weapons = activeTemplate.weapons;
-    activeBuildIndex = 7;
+    activeBuildIndex = 8;
   } else {
     // Sync the baseline with currently active/visible allocations to prevent stale/hidden state overrides
     customBaselineAllocations = { ...customBuild.allocations };
@@ -2506,14 +2577,14 @@ function checkSkillLockState(skill, allocations) {
 }
 
 window.resetCustomBuild = function() {
-  const customBuild = SKILL_BUILDS[7];
+  const customBuild = SKILL_BUILDS[8];
   customBuild.unlocked = [];
   customBuild.allocations = {};
   customBaselineAllocations = {};
   customBuild.weapons = 'None / Custom Loadout';
   customBuild.augment = 'None / Custom Loadout';
   updateBuildStats(customBuild);
-  selectBuild(7);
+  selectBuild(8);
 };
 
 window.updateExpeditionLimit = function() {
