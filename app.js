@@ -2037,7 +2037,7 @@ window.selectBuild = function(buildIndex) {
   
   if (isAutoAdjust) {
     if (build.priorityList) {
-      build.allocations = autoAdjustBuild(null, maxPoints, null, build.priorityList);
+      build.allocations = autoAdjustBuild(null, maxPoints, getBranchPriority(build), build.priorityList);
     } else {
       const branchPriority = getBranchPriority(build);
       build.allocations = autoAdjustBuild(baseline, maxPoints, branchPriority, null);
@@ -2222,6 +2222,19 @@ function autoAdjustBuild(baseline, targetPoints, branchPriority, priorityList) {
           const aHas = (allocations[a.id] || 0) > 0 ? 1 : 0;
           const bHas = (allocations[b.id] || 0) > 0 ? 1 : 0;
           if (aHas !== bHas) return bHas - aHas;
+          
+          if (branchPriority) {
+            const aBranch = getSkillBranch(a.id);
+            const bBranch = getSkillBranch(b.id);
+            if (aBranch !== bBranch) {
+              const aBranchIdx = branchPriority.indexOf(aBranch);
+              const bBranchIdx = branchPriority.indexOf(bBranch);
+              if (aBranchIdx !== -1 && bBranchIdx !== -1) {
+                return aBranchIdx - bBranchIdx;
+              }
+            }
+          }
+          if (a.tier !== b.tier) return a.tier - b.tier;
           return a.id.localeCompare(b.id);
         });
         
