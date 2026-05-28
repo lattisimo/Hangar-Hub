@@ -1377,31 +1377,31 @@ window.updateBackpackSimulator = function() {
 // Skill Planner Database & State
 const SKILLS_DB = {
   conditioning: [
-    { id: 'used_to_weight', name: 'Used to the Weight', tier: 1, icon: 'fa-shield-halved', desc: 'Reduces movement speed penalty by 30% when wearing a shield.' },
-    { id: 'blast_born', name: 'Blast-Born', tier: 1, icon: 'fa-burst', desc: 'Reduces the duration of hearing impairment and shake caused by nearby explosions by 50%.' },
-    { id: 'proficient_pryer', name: 'Proficient Pryer', tier: 2, icon: 'fa-key', desc: 'Reduces container and door prying time by 25%.' },
-    { id: 'gentle_pressure', name: 'Gentle Pressure', tier: 2, icon: 'fa-volume-xmark', desc: 'Reduces noise made when breaching doors or containers by 40%.' },
-    { id: 'fight_or_flight', name: 'Fight or Flight', tier: 3, icon: 'fa-heart-pulse', desc: 'Regain 15 stamina instantly when taking damage in combat (15s cooldown).' },
-    { id: 'survivor_stamina', name: 'Survivor\'s Stamina', tier: 3, icon: 'fa-bolt', desc: 'Stamina regenerates 30% faster when your health drops below 25%.' },
-    { id: 'downed_determined', name: 'Downed But Determined', tier: 3, icon: 'fa-hand-holding-heart', desc: 'Increases bleed-out time when downed by 30%, giving allies more time to revive you.' }
+    { id: 'used_to_weight', name: 'Used to the Weight', tier: 1, icon: 'fa-shield-halved', maxPoints: 5, desc: 'Reduces movement speed penalty by 30% when wearing a shield.' },
+    { id: 'blast_born', name: 'Blast-Born', tier: 1, icon: 'fa-burst', maxPoints: 5, desc: 'Reduces the duration of hearing impairment and shake caused by nearby explosions by 50%.' },
+    { id: 'proficient_pryer', name: 'Proficient Pryer', tier: 2, icon: 'fa-key', maxPoints: 5, desc: 'Reduces container and door prying time by 25%.' },
+    { id: 'gentle_pressure', name: 'Gentle Pressure', tier: 2, icon: 'fa-volume-xmark', maxPoints: 5, desc: 'Reduces noise made when breaching doors or containers by 40%.' },
+    { id: 'fight_or_flight', name: 'Fight or Flight', tier: 3, icon: 'fa-heart-pulse', maxPoints: 5, desc: 'Regain 15 stamina instantly when taking damage in combat (15s cooldown).' },
+    { id: 'survivor_stamina', name: 'Survivor\'s Stamina', tier: 3, icon: 'fa-bolt', maxPoints: 1, desc: 'Stamina regenerates 30% faster when your health drops below 25%.' },
+    { id: 'downed_determined', name: 'Downed But Determined', tier: 3, icon: 'fa-hand-holding-heart', maxPoints: 5, desc: 'Increases bleed-out time when downed by 30%, giving allies more time to revive you.' }
   ],
   mobility: [
-    { id: 'marathon_runner', name: 'Marathon Runner', tier: 1, icon: 'fa-gauge-high', desc: 'Sprinting consumes 20% less stamina.' },
-    { id: 'youthful_lungs', name: 'Youthful Lungs', tier: 1, icon: 'fa-lungs', desc: 'Increases maximum stamina pool by 25 points.' },
-    { id: 'nimble_climber', name: 'Nimble Climber', tier: 2, icon: 'fa-person-climbing', desc: 'Increases vaulting, climbing, and ladder traversal speeds by 30%.' },
-    { id: 'sturdy_ankles', name: 'Sturdy Ankles', tier: 2, icon: 'fa-shoe-prints', desc: 'Reduces falling damage by 50% from non-lethal heights.' },
-    { id: 'slip_slide', name: 'Slip and Slide', tier: 2, icon: 'fa-person-skating', desc: 'Increases slide distance by 25% and slide speed by 15%.' },
-    { id: 'carry_momentum', name: 'Carry the Momentum', tier: 3, icon: 'fa-forward', desc: 'Executing a sprint dodge roll negates sprint stamina cost for 2 seconds.' },
-    { id: 'calming_stroll', name: 'Calming Stroll', tier: 3, icon: 'fa-person-walking', desc: 'Allows stamina to regenerate at 100% speed while walking (normally requires standing still).' }
+    { id: 'marathon_runner', name: 'Marathon Runner', tier: 1, icon: 'fa-gauge-high', maxPoints: 5, desc: 'Sprinting consumes 20% less stamina.' },
+    { id: 'youthful_lungs', name: 'Youthful Lungs', tier: 1, icon: 'fa-lungs', maxPoints: 5, desc: 'Increases maximum stamina pool by 25 points.' },
+    { id: 'nimble_climber', name: 'Nimble Climber', tier: 2, icon: 'fa-person-climbing', maxPoints: 5, desc: 'Increases vaulting, climbing, and ladder traversal speeds by 30%.' },
+    { id: 'sturdy_ankles', name: 'Sturdy Ankles', tier: 2, icon: 'fa-shoe-prints', maxPoints: 5, desc: 'Reduces falling damage by 50% from non-lethal heights.' },
+    { id: 'slip_slide', name: 'Slip and Slide', tier: 2, icon: 'fa-person-skating', maxPoints: 5, desc: 'Increases slide distance by 25% and slide speed by 15%.' },
+    { id: 'carry_momentum', name: 'Carry the Momentum', tier: 3, icon: 'fa-forward', maxPoints: 1, desc: 'Executing a sprint dodge roll negates sprint stamina cost for 2 seconds.' },
+    { id: 'calming_stroll', name: 'Calming Stroll', tier: 3, icon: 'fa-person-walking', maxPoints: 1, desc: 'Allows stamina to regenerate at 100% speed while walking (normally requires standing still).' }
   ],
   survival: [
-    { id: 'agile_croucher', name: 'Agile Croucher', tier: 1, icon: 'fa-person-running', desc: 'Increases crouching movement speed by 25%.' },
-    { id: 'silent_scavenger', name: 'Silent Scavenger', tier: 1, icon: 'fa-volume-mute', desc: 'Reduces the radius of noise generated when searching containers by 50%.' },
-    { id: 'in_round_crafting', name: 'In-Round Crafting', tier: 2, icon: 'fa-screwdriver-wrench', desc: 'Unlocks the ability to craft basic medical supplies and ammo stacks topside during raids.' },
-    { id: 'looters_luck', name: 'Looter\'s Luck', tier: 2, icon: 'fa-clover', desc: 'Increases the chance of finding rare components in industrial chests by 15%.' },
-    { id: 'broad_shoulders', name: 'Broad Shoulders', tier: 3, icon: 'fa-weight-hanging', desc: 'Increases maximum carry weight limit by 15.0 kg.' },
-    { id: 'traveling_tinkerer', name: 'Traveling Tinkerer', tier: 3, icon: 'fa-hammer', desc: 'Allows field crafting of high-tier gadgets (e.g. traps, shield rechargers) during raids.' },
-    { id: 'looters_instincts', name: 'Looter\'s Instincts', tier: 3, icon: 'fa-eye', desc: 'Container icons are highlighted through walls within a 15-meter range.' }
+    { id: 'agile_croucher', name: 'Agile Croucher', tier: 1, icon: 'fa-person-running', maxPoints: 5, desc: 'Increases crouching movement speed by 25%.' },
+    { id: 'silent_scavenger', name: 'Silent Scavenger', tier: 1, icon: 'fa-volume-mute', maxPoints: 5, desc: 'Reduces the radius of noise generated when searching containers by 50%.' },
+    { id: 'in_round_crafting', name: 'In-Round Crafting', tier: 2, icon: 'fa-screwdriver-wrench', maxPoints: 1, desc: 'Unlocks the ability to craft basic medical supplies and ammo stacks topside during raids.' },
+    { id: 'looters_luck', name: 'Looter\'s Luck', tier: 2, icon: 'fa-clover', maxPoints: 5, desc: 'Increases the chance of finding rare components in industrial chests by 15%.' },
+    { id: 'broad_shoulders', name: 'Broad Shoulders', tier: 3, icon: 'fa-weight-hanging', maxPoints: 5, desc: 'Increases maximum carry weight limit by 15.0 kg.' },
+    { id: 'traveling_tinkerer', name: 'Traveling Tinkerer', tier: 3, icon: 'fa-hammer', maxPoints: 1, desc: 'Allows field crafting of high-tier gadgets (e.g. traps, shield rechargers) during raids.' },
+    { id: 'looters_instincts', name: 'Looter\'s Instincts', tier: 3, icon: 'fa-eye', maxPoints: 5, desc: 'Container icons are highlighted through walls within a 15-meter range.' }
   ]
 };
 
@@ -1589,7 +1589,7 @@ window.selectBuild = function(buildIndex) {
 
 function getMaxPointsForSkill(skill) {
   if (!skill) return 5;
-  return skill.tier === 1 ? 5 : (skill.tier === 2 ? 10 : 15);
+  return skill.maxPoints || 5;
 }
 
 function findSkillById(skillId) {
