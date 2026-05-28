@@ -1587,25 +1587,52 @@ window.selectBuild = function(buildIndex) {
   document.getElementById('skill-detail-text').textContent = 'Hover over or click any skill node in the planner columns to view its full mechanical description, tier requirements, and active bonuses.';
 };
 
+function getMaxPointsForSkill(skill) {
+  if (!skill) return 5;
+  return skill.tier === 1 ? 5 : (skill.tier === 2 ? 10 : 15);
+}
+
+function findSkillById(skillId) {
+  for (const branch in SKILLS_DB) {
+    const skill = SKILLS_DB[branch].find(s => s.id === skillId);
+    if (skill) return skill;
+  }
+  return null;
+}
+
 function updateBuildStats(build) {
+  // Ensure allocations dictionary exists
+  if (!build.allocations) {
+    build.allocations = {};
+    build.unlocked.forEach(skillId => {
+      const skill = findSkillById(skillId);
+      if (skill) {
+        build.allocations[skillId] = getMaxPointsForSkill(skill);
+      }
+    });
+  }
+  
   let condPts = 0;
   let mobPts = 0;
   let survPts = 0;
   
-  build.unlocked.forEach(skillId => {
+  Object.entries(build.allocations).forEach(([skillId, pts]) => {
     let skill = SKILLS_DB.conditioning.find(s => s.id === skillId);
-    if (skill) condPts += (skill.tier === 1 ? 5 : (skill.tier === 2 ? 10 : 15));
+    if (skill) condPts += pts;
     
     skill = SKILLS_DB.mobility.find(s => s.id === skillId);
-    if (skill) mobPts += (skill.tier === 1 ? 5 : (skill.tier === 2 ? 10 : 15));
+    if (skill) mobPts += pts;
     
     skill = SKILLS_DB.survival.find(s => s.id === skillId);
-    if (skill) survPts += (skill.tier === 1 ? 5 : (skill.tier === 2 ? 10 : 15));
+    if (skill) survPts += pts;
   });
   
   build.points.conditioning = condPts;
   build.points.mobility = mobPts;
   build.points.survival = survPts;
+  
+  // Sync the unlocked list for compatibility with standard checks
+  build.unlocked = Object.keys(build.allocations).filter(id => build.allocations[id] > 0);
 }
 
 window.toggleSkill = function(skillId, branchKey) {
@@ -1615,17 +1642,40 @@ window.toggleSkill = function(skillId, branchKey) {
   if (activeBuildIndex < 5) {
     const activeTemplate = SKILL_BUILDS[activeBuildIndex];
     customBuild.unlocked = [...activeTemplate.unlocked];
+    
+    customBuild.allocations = {};
+    if (activeTemplate.allocations) {
+      Object.assign(customBuild.allocations, activeTemplate.allocations);
+    } else {
+      activeTemplate.unlocked.forEach(id => {
+        const s = findSkillById(id);
+        if (s) customBuild.allocations[id] = getMaxPointsForSkill(s);
+      });
+    }
+    
     customBuild.augment = activeTemplate.augment;
     customBuild.weapons = activeTemplate.weapons;
     activeBuildIndex = 5;
   }
   
-  // Toggle the skill
-  const idx = customBuild.unlocked.indexOf(skillId);
-  if (idx > -1) {
-    customBuild.unlocked.splice(idx, 1);
+  if (!customBuild.allocations) {
+    customBuild.allocations = {};
+  }
+  
+  const skill = findSkillById(skillId);
+  const maxPts = getMaxPointsForSkill(skill);
+  
+  // Increment points
+  const currentPts = customBuild.allocations[skillId] || 0;
+  let nextPts = currentPts + 1;
+  if (nextPts > maxPts) {
+    nextPts = 0; // Wrap around to 0
+  }
+  
+  if (nextPts === 0) {
+    delete customBuild.allocations[skillId];
   } else {
-    customBuild.unlocked.push(skillId);
+    customBuild.allocations[skillId] = nextPts;
   }
   
   // Re-calculate points for custom build
@@ -1641,16 +1691,16 @@ window.toggleSkill = function(skillId, branchKey) {
   selectBuild(activeBuildIndex);
   
   // Update details panel to keep focus on toggled skill
-  const skill = SKILLS_DB[branchKey].find(s => s.id === skillId);
   if (skill) {
-    const isUnlockedNow = customBuild.unlocked.includes(skillId);
-    showSkillDetail(skill, isUnlockedNow, branchKey);
+    const isUnlockedNow = nextPts > 0;
+    showSkillDetail(skill, isUnlockedNow, branchKey, nextPts);
   }
 };
 
 window.resetCustomBuild = function() {
   const customBuild = SKILL_BUILDS[5];
   customBuild.unlocked = [];
+  customBuild.allocations = {};
   customBuild.weapons = 'None / Custom Loadout';
   customBuild.augment = 'None / Custom Loadout';
   updateBuildStats(customBuild);
@@ -1668,35 +1718,55 @@ function renderBranchNodes(branchKey, build) {
   container.innerHTML = '';
   const skills = SKILLS_DB[branchKey];
   
+  // Ensure allocations exists
+  if (!build.allocations) {
+    build.allocations = {};
+    build.unlocked.forEach(id => {
+      const s = findSkillById(id);
+      if (s) build.allocations[id] = getMaxPointsForSkill(s);
+    });
+  }
+  
   skills.forEach(skill => {
-    const isUnlocked = build.unlocked.includes(skill.id);
+    const allocatedPoints = build.allocations[skill.id] || 0;
+    const maxPts = getMaxPointsForSkill(skill);
+    const isUnlocked = allocatedPoints > 0;
+    
     const card = document.createElement('div');
     card.className = `skill-node-card ${isUnlocked ? `unlocked ${branchKey}` : 'locked'}`;
     
-    card.onmouseover = () => showSkillDetail(skill, isUnlocked, branchKey);
+    card.onmouseover = () => showSkillDetail(skill, isUnlocked, branchKey, allocatedPoints);
     card.onclick = () => toggleSkill(skill.id, branchKey);
     
     card.innerHTML = `
       <div class="skill-node-icon">
         <i class="fa-solid ${skill.icon}"></i>
       </div>
-      <div style="display:flex; flex-direction:column; gap:0.15rem;">
+      <div style="display:flex; flex-direction:column; gap:0.15rem; flex:1;">
         <span class="skill-node-name">${skill.name}</span>
-        <span style="font-size:0.6rem; color:var(--text-muted); font-family:var(--font-mono);">Tier ${skill.tier}</span>
+        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.6rem; color:var(--text-muted); font-family:var(--font-mono);">
+          <span>Tier ${skill.tier}</span>
+          <span class="node-point-counter" style="color: ${isUnlocked ? 'var(--accent-color)' : 'var(--text-muted)'}; font-weight:${isUnlocked ? '700' : '400'};">${allocatedPoints}/${maxPts}</span>
+        </div>
       </div>
     `;
     container.appendChild(card);
   });
 }
 
-function showSkillDetail(skill, isUnlocked, branchKey) {
-  const panel = document.getElementById('skill-detail-panel');
+function showSkillDetail(skill, isUnlocked, branchKey, allocatedPoints = 0) {
   const textContainer = document.getElementById('skill-detail-text');
+  if (!textContainer) return;
   
   const branchName = branchKey.charAt(0).toUpperCase() + branchKey.slice(1);
-  const statusHtml = isUnlocked 
-    ? `<span style="color:var(--accent-color); font-weight:700;">[UNLOCKED IN BUILD]</span>`
-    : `<span style="color:var(--text-muted);">[LOCKED IN BUILD]</span>`;
+  const maxPts = getMaxPointsForSkill(skill);
+  
+  let statusHtml = '';
+  if (allocatedPoints > 0) {
+    statusHtml = `<span style="color:var(--accent-color); font-weight:700;">[INVESTED: ${allocatedPoints}/${maxPts} PTS]</span>`;
+  } else {
+    statusHtml = `<span style="color:var(--text-muted);">[NOT INVESTED]</span>`;
+  }
     
   textContainer.innerHTML = `
     <div style="margin-bottom:0.5rem; display:flex; justify-content:space-between; align-items:center;">
@@ -1704,10 +1774,14 @@ function showSkillDetail(skill, isUnlocked, branchKey) {
       ${statusHtml}
     </div>
     <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.5rem; font-family:var(--font-mono); text-transform:uppercase;">
-      Branch: ${branchName} | Requirement: Tier ${skill.tier}
+      Branch: ${branchName} | Tier: ${skill.tier} (Max: ${maxPts} pts)
     </div>
-    <div style="line-height:1.5; color:var(--text-secondary);">
+    <div style="line-height:1.5; color:var(--text-secondary); margin-bottom:0.5rem;">
       ${skill.desc}
+    </div>
+    <div style="font-size:0.7rem; color:var(--text-muted); border-top: 1px dashed var(--panel-border); padding-top: 0.5rem; margin-top: 0.5rem;">
+      <i class="fa-solid fa-circle-info" style="color: var(--accent-color); margin-right:0.25rem;"></i>
+      Click node to increment points (wraps to 0 at max).
     </div>
   `;
 }
