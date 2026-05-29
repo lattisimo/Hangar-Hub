@@ -2030,6 +2030,54 @@ const SKILL_BUILDS = [
     branchPriority: ['survival', 'mobility', 'conditioning']
   },
   {
+    name: 'Unyielding Extractionist',
+    summary: 'High-resiliency survival specialist',
+    desc: 'Built for maximum durability and self-sufficiency. Combines health regeneration when critically wounded, prolonged downed bleed-out times, and heavy shield defense to guarantee you return to Speranza with your loot.',
+    focus: 'Mixed',
+    risk: 'Low',
+    points: { conditioning: 40, mobility: 10, survival: 25 },
+    augment: 'Looting Mk. 3 (Safekeeper)',
+    weapons: 'Renegade IV (Battle Rifle), Medium Shield | Surges, Nanite Healers, Heavy Ammo',
+    unlocked: [],
+    defaultAllocations: {
+      used_to_weight: 5, blast_born: 5, effortless_swing: 5, a_little_extra: 5, sky_clearing_swing: 5,
+      turtle_crawl: 5, unburdened_roll: 1, loaded_arms: 1, proficient_pryer: 4, downed_determined: 2,
+      back_on_your_feet: 1, survivor_stamina: 1, marathon_runner: 5, youthful_lungs: 5, agile_croucher: 5,
+      silent_scavenger: 5, good_as_new: 5, suffer_in_silence: 5, in_round_crafting: 1, minesweeper: 1,
+      looters_luck: 3
+    },
+    priorityList: [
+      { id: 'marathon_runner', target: 1 },
+      { id: 'youthful_lungs', target: 1 },
+      { id: 'agile_croucher', target: 1 },
+      { id: 'silent_scavenger', target: 1 },
+      { id: 'used_to_weight', target: 1 },
+      { id: 'blast_born', target: 1 },
+      { id: 'marathon_runner', target: 5 },
+      { id: 'youthful_lungs', target: 5 },
+      { id: 'agile_croucher', target: 5 },
+      { id: 'silent_scavenger', target: 5 },
+      { id: 'used_to_weight', target: 5 },
+      { id: 'blast_born', target: 5 },
+      { id: 'effortless_swing', target: 5 },
+      { id: 'a_little_extra', target: 5 },
+      { id: 'sky_clearing_swing', target: 5 },
+      { id: 'turtle_crawl', target: 5 },
+      { id: 'unburdened_roll', target: 1 },
+      { id: 'loaded_arms', target: 1 },
+      { id: 'proficient_pryer', target: 4 },
+      { id: 'downed_determined', target: 2 },
+      { id: 'back_on_your_feet', target: 1 },
+      { id: 'survivor_stamina', target: 1 },
+      { id: 'good_as_new', target: 5 },
+      { id: 'suffer_in_silence', target: 5 },
+      { id: 'in_round_crafting', target: 1 },
+      { id: 'minesweeper', target: 1 },
+      { id: 'looters_luck', target: 3 }
+    ],
+    branchPriority: ['conditioning', 'survival', 'mobility']
+  },
+  {
     name: 'Custom Build',
     summary: 'Your hand-crafted skill combination',
     desc: 'Experiment by toggling individual skills in the columns. Click any node to add or remove it from your loadout.',
@@ -2097,7 +2145,7 @@ window.selectBuild = function(buildIndex) {
   const autoAdjustToggle = document.getElementById('auto-adjust-toggle');
   const isAutoAdjust = autoAdjustToggle ? autoAdjustToggle.checked : true;
   
-  const baseline = buildIndex === 8 ? customBaselineAllocations : (build.defaultAllocations || {});
+  const baseline = buildIndex === 9 ? customBaselineAllocations : (build.defaultAllocations || {});
   
   if (isAutoAdjust) {
     if (build.priorityList) {
@@ -2188,7 +2236,7 @@ window.selectBuild = function(buildIndex) {
   // Toggle reset button visibility
   const resetBtn = document.getElementById('reset-build-btn');
   if (resetBtn) {
-    resetBtn.style.display = buildIndex === 8 ? 'block' : 'none';
+    resetBtn.style.display = buildIndex === 9 ? 'block' : 'none';
   }
 
   // Render nodes for each branch
@@ -2437,16 +2485,16 @@ function updateBuildStats(build) {
 }
 
 window.toggleSkill = function(skillId, branchKey) {
-  const customBuild = SKILL_BUILDS[8];
+  const customBuild = SKILL_BUILDS[9];
   
-  // If active build is one of the templates (0-7), clone its allocations to baseline to start
-  if (activeBuildIndex < 8) {
+  // If active build is one of the templates (0-8), clone its allocations to baseline to start
+  if (activeBuildIndex < 9) {
     const activeTemplate = SKILL_BUILDS[activeBuildIndex];
     customBaselineAllocations = { ...(activeTemplate.allocations || activeTemplate.defaultAllocations || {}) };
     customBuild.allocations = { ...customBaselineAllocations };
     customBuild.augment = activeTemplate.augment;
     customBuild.weapons = activeTemplate.weapons;
-    activeBuildIndex = 8;
+    activeBuildIndex = 9;
   } else {
     // Sync the baseline with currently active/visible allocations to prevent stale/hidden state overrides
     customBaselineAllocations = { ...customBuild.allocations };
@@ -2576,14 +2624,14 @@ function checkSkillLockState(skill, allocations) {
 }
 
 window.resetCustomBuild = function() {
-  const customBuild = SKILL_BUILDS[8];
+  const customBuild = SKILL_BUILDS[9];
   customBuild.unlocked = [];
   customBuild.allocations = {};
   customBaselineAllocations = {};
   customBuild.weapons = 'None / Custom Loadout';
   customBuild.augment = 'None / Custom Loadout';
   updateBuildStats(customBuild);
-  selectBuild(8);
+  selectBuild(9);
 };
 
 window.updateExpeditionLimit = function() {
