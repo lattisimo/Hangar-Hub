@@ -2036,7 +2036,7 @@ const SKILL_BUILDS = [
     focus: 'Mixed',
     risk: 'Low',
     points: { conditioning: 40, mobility: 10, survival: 25 },
-    augment: 'Looting Mk. 3 (Safekeeper)',
+    augment: 'Looting Mk. 3 (Survivor)',
     weapons: 'Renegade IV (Battle Rifle), Medium Shield | Vita Injections, Surge Shield Rechargers, Heavy Ammo',
     unlocked: [],
     defaultAllocations: {
