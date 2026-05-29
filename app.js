@@ -1731,7 +1731,7 @@ const SKILL_BUILDS = [
     risk: 'High',
     points: { conditioning: 9, mobility: 20, survival: 46 },
     augment: 'Looting Mk. 3 (Survivor)',
-    weapons: 'Renegade IV (Battle Rifle), Light Shield | Heals, Shield Rechargers, Ammo',
+    weapons: 'Renegade IV (Battle Rifle), Light Shield | Vita Injections, Surge Shield Rechargers, Medium Ammo',
     unlocked: [],
     defaultAllocations: {
       silent_scavenger: 5, agile_croucher: 5, suffer_in_silence: 5, in_round_crafting: 1, looters_luck: 5,
@@ -1817,7 +1817,7 @@ const SKILL_BUILDS = [
     risk: 'Medium',
     points: { conditioning: 9, mobility: 45, survival: 21 },
     augment: 'Looting Mk. 3 (Cautious)',
-    weapons: 'Stitcher IV (SMG), Light Shield | Stimulants, Heals, Standard Ammo',
+    weapons: 'Stitcher IV (SMG), Light Shield | Adrenaline Shots, Sterile Bandages, Light Ammo',
     unlocked: [],
     defaultAllocations: {
       marathon_runner: 5, youthful_lungs: 5, nimble_climber: 5, vigorous_vaulter: 1, slip_slide: 5,
@@ -1861,7 +1861,7 @@ const SKILL_BUILDS = [
     risk: 'High',
     points: { conditioning: 20, mobility: 10, survival: 45 },
     augment: 'Looting Mk. 3 (Safekeeper)',
-    weapons: 'Osprey IV (Sniper), Light Shield | Silenced Pistol, Decoys, Ammo',
+    weapons: 'Osprey IV (Sniper), Light Shield | Hairpin IV (Silenced Pistol), Lure Grenades, Heavy/Light Ammo',
     unlocked: [],
     defaultAllocations: {
       silent_scavenger: 5, agile_croucher: 5, suffer_in_silence: 5, in_round_crafting: 1, looters_luck: 5,
@@ -1992,7 +1992,7 @@ const SKILL_BUILDS = [
     risk: 'Low',
     points: { conditioning: 10, mobility: 20, survival: 45 },
     augment: 'Free Loadout (Basic)',
-    weapons: 'Ferro I (Battle Rifle), Hairpin I (Pistol) | Bandages, Light/Medium Ammo',
+    weapons: 'Ferro I (Battle Rifle), Hairpin I (Pistol) | Sterile Bandages, Surge Shield Rechargers, Medium/Light Ammo',
     unlocked: [],
     defaultAllocations: {
       blast_born: 5, a_little_extra: 5,
