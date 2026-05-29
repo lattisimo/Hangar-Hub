@@ -1686,7 +1686,7 @@ const SKILL_BUILDS = [
     risk: 'High',
     points: { conditioning: 23, mobility: 37, survival: 15 },
     augment: 'Combat Mk. 3 (Aggressive)',
-    weapons: 'Tempest IV (Assault Rifle), Toro IV (Shotgun) or Stitcher IV (SMG) | Shrapnel Grenades, Adrenaline Shots, Shield Rechargers',
+    weapons: 'Tempest IV (Assault Rifle), Toro IV (Shotgun) or Stitcher IV (SMG), Light Shield | Shrapnel Grenades, Adrenaline Shots, Shield Rechargers',
     unlocked: [],
     defaultAllocations: {
       blast_born: 5, effortless_swing: 5, a_little_extra: 5, loaded_arms: 1, unburdened_roll: 1,
@@ -1992,7 +1992,7 @@ const SKILL_BUILDS = [
     risk: 'Low',
     points: { conditioning: 10, mobility: 20, survival: 45 },
     augment: 'Free Loadout (Basic)',
-    weapons: 'Ferro I (Battle Rifle), Hairpin I (Pistol) | Sterilized Bandages, Surge Shield Rechargers, Heavy/Light Ammo',
+    weapons: 'Ferro I (Battle Rifle), Hairpin I (Pistol), Light Shield | Bandages, Shield Rechargers, Heavy/Light Ammo',
     unlocked: [],
     defaultAllocations: {
       blast_born: 5, a_little_extra: 5,
