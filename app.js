@@ -1686,7 +1686,7 @@ const SKILL_BUILDS = [
     risk: 'High',
     points: { conditioning: 23, mobility: 37, survival: 15 },
     augment: 'Combat Mk. 3 (Aggressive)',
-    weapons: 'Tempest IV (Assault Rifle), Toro IV (Shotgun) or Stitcher IV (SMG) | Grenades, Combat Stimulants, Shield Rechargers',
+    weapons: 'Tempest IV (Assault Rifle), Toro IV (Shotgun) or Stitcher IV (SMG) | Shrapnel Grenades, Adrenaline Shots, Shield Rechargers',
     unlocked: [],
     defaultAllocations: {
       blast_born: 5, effortless_swing: 5, a_little_extra: 5, loaded_arms: 1, unburdened_roll: 1,
@@ -1731,7 +1731,7 @@ const SKILL_BUILDS = [
     risk: 'High',
     points: { conditioning: 9, mobility: 20, survival: 46 },
     augment: 'Looting Mk. 3 (Survivor)',
-    weapons: 'Renegade IV (Battle Rifle), Light Shield | Vita Injections, Surge Shield Rechargers, Medium Ammo',
+    weapons: 'Renegade IV (Battle Rifle), Light Shield | Sterilized Bandages, Surge Shield Rechargers, Medium Ammo',
     unlocked: [],
     defaultAllocations: {
       silent_scavenger: 5, agile_croucher: 5, suffer_in_silence: 5, in_round_crafting: 1, looters_luck: 5,
@@ -1773,7 +1773,7 @@ const SKILL_BUILDS = [
     risk: 'High',
     points: { conditioning: 48, mobility: 22, survival: 5 },
     augment: 'Tactical Mk. 3 (Defensive)',
-    weapons: 'Torrente IV (LMG), Heavy Shield | Vita Injections, Surge Shield Rechargers, Medium Ammo',
+    weapons: 'Torrente IV (LMG), Heavy Shield | Sterilized Bandages, Surge Shield Rechargers, Medium Ammo',
     unlocked: [],
     defaultAllocations: {
       used_to_weight: 5, blast_born: 5, effortless_swing: 5, unburdened_roll: 1, loaded_arms: 1,
@@ -1817,7 +1817,7 @@ const SKILL_BUILDS = [
     risk: 'Medium',
     points: { conditioning: 9, mobility: 45, survival: 21 },
     augment: 'Looting Mk. 3 (Cautious)',
-    weapons: 'Stitcher IV (SMG), Light Shield | Adrenaline Shots, Sterile Bandages, Light Ammo',
+    weapons: 'Stitcher IV (SMG), Light Shield | Adrenaline Shots, Sterilized Bandages, Light Ammo',
     unlocked: [],
     defaultAllocations: {
       marathon_runner: 5, youthful_lungs: 5, nimble_climber: 5, vigorous_vaulter: 1, slip_slide: 5,
@@ -1902,7 +1902,7 @@ const SKILL_BUILDS = [
     risk: 'Medium',
     points: { conditioning: 18, mobility: 15, survival: 42 },
     augment: 'Tactical Mk. 3 (Healing)',
-    weapons: 'Rattler IV (Assault Rifle), Medium Shield | Vita Sprays, Deployable Turrets, Medium Ammo',
+    weapons: 'Rattler IV (Assault Rifle), Medium Shield | Vita Sprays, Blaze Grenade Traps, Medium Ammo',
     unlocked: [],
     defaultAllocations: {
       agile_croucher: 5, silent_scavenger: 5, good_as_new: 5, in_round_crafting: 1, three_deep_breaths: 5,
@@ -1992,7 +1992,7 @@ const SKILL_BUILDS = [
     risk: 'Low',
     points: { conditioning: 10, mobility: 20, survival: 45 },
     augment: 'Free Loadout (Basic)',
-    weapons: 'Ferro I (Battle Rifle), Hairpin I (Pistol) | Sterile Bandages, Surge Shield Rechargers, Heavy/Light Ammo',
+    weapons: 'Ferro I (Battle Rifle), Hairpin I (Pistol) | Sterilized Bandages, Surge Shield Rechargers, Heavy/Light Ammo',
     unlocked: [],
     defaultAllocations: {
       blast_born: 5, a_little_extra: 5,
@@ -2037,7 +2037,7 @@ const SKILL_BUILDS = [
     risk: 'Low',
     points: { conditioning: 40, mobility: 10, survival: 25 },
     augment: 'Looting Mk. 3 (Survivor)',
-    weapons: 'Renegade IV (Battle Rifle), Medium Shield | Vita Injections, Surge Shield Rechargers, Medium Ammo',
+    weapons: 'Renegade IV (Battle Rifle), Medium Shield | Sterilized Bandages, Surge Shield Rechargers, Medium Ammo',
     unlocked: [],
     defaultAllocations: {
       used_to_weight: 5, blast_born: 5, effortless_swing: 5, a_little_extra: 5, sky_clearing_swing: 5,
