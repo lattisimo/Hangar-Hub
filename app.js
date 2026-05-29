@@ -1773,7 +1773,7 @@ const SKILL_BUILDS = [
     risk: 'High',
     points: { conditioning: 48, mobility: 22, survival: 5 },
     augment: 'Tactical Mk. 3 (Defensive)',
-    weapons: 'Torrente IV (LMG), Heavy Shield | Sterilized Bandages, Surge Shield Rechargers, Medium Ammo',
+    weapons: 'Torrente IV (LMG) or Bettina IV (Assault Rifle), Heavy Shield | Sterilized Bandages, Surge Shield Rechargers, Medium/Heavy Ammo',
     unlocked: [],
     defaultAllocations: {
       used_to_weight: 5, blast_born: 5, effortless_swing: 5, unburdened_roll: 1, loaded_arms: 1,
@@ -2032,7 +2032,7 @@ const SKILL_BUILDS = [
   {
     name: 'Unyielding Extractionist',
     summary: 'High-resiliency survival specialist',
-    desc: 'Built for maximum durability and self-sufficiency. Combines health regeneration when critically wounded, prolonged downed bleed-out times, and heavy shield defense to guarantee you return to Speranza with your loot.',
+    desc: 'Built for maximum durability and self-sufficiency. Combines health regeneration when critically wounded, prolonged downed bleed-out times, and robust shield defense to guarantee you return to Speranza with your loot.',
     focus: 'Mixed',
     risk: 'Low',
     points: { conditioning: 40, mobility: 10, survival: 25 },
